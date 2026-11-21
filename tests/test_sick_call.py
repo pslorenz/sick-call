@@ -53,6 +53,8 @@ class Backtest(unittest.TestCase):
         php = rows["CVE-2026-109618"]
         self.assertEqual(php["outcome"], "escalated inside window")    # feeds alone deferred it; watch list catches day 5
         self.assertEqual(rows["CVE-2026-90002"]["panic_avoided"], "yes")
+        wg = rows["CVE-2026-81430"]                                     # same vendor, product, day: one advisory
+        self.assertEqual((wg["advisory"], wg["cve_count"]), ("watchguard-2026-11-20", "3"))
         sc = rows["CVE-2026-84869"]                                     # remote access gets the 72-hour floor
         self.assertEqual((sc["remote_access"], sc["window_internet"]), ("yes", "72 hours"))
         mt = rows["CVE-2026-67277"]
@@ -83,6 +85,19 @@ class Matching(unittest.TestCase):
         self.assertEqual(fm.smb_pair("Microsoft", "Windows 11"), "microsoft: windows")
         self.assertEqual(fm.smb_pair("Fortinet", "FortiOS"), "fortinet")
         self.assertTrue(fm.edge_pair("Fortinet", "FortiOS"))
+
+    def test_bulletin_grouping(self):
+        sys.path.insert(0, os.path.join(ROOT, "tools"))
+        import datetime
+        import fud_meter as fm
+        day = datetime.date(2026, 11, 12)
+        cit = [("Citrix", "NetScaler ADC"), ("Citrix", "NetScaler Gateway")]
+        self.assertEqual(fm.advisory_key("CVE-2026-1", "", day, [], cit), "citrix-2026-11-12")   # multi-product, one vendor
+        nable = "https://me.n-able.com/s/security-advisory/aArV/cve2026125878-ognl-injection"
+        self.assertEqual(fm.advisory_key("CVE-2026-125878", "", day, [nable], [("N-able", "N-central")]),
+                         "n-able-2026-11-12")                                               # per-CVE page, no dashes
+        self.assertEqual(fm.advisory_key("CVE-2026-2", "", day, [], [("Citrix NetScaler", "ADC")]),
+                         "citrix-2026-11-12")                                               # vendor spelled two ways
 
 class LocalConfig(unittest.TestCase):
     def test_overrides_apply(self):
@@ -116,6 +131,139 @@ class LocalConfig(unittest.TestCase):
             r = subprocess.run([sys.executable, "tools/fud_meter.py", "cases/sonicwall-0014.signals.json"],
                                cwd=ROOT, capture_output=True, text=True, env={**os.environ, "SICK_CALL_CONFIG": cfg})
         self.assertNotEqual(r.returncode, 0)
+
+class Daily(unittest.TestCase):
+    """The v0.2 daily run: intake, watch, escalation, follow-through, manual requests."""
+
+    def run_daily(self, t, today, *extra):
+        r = subprocess.run([sys.executable, "tools/daily.py", "--cvelist", f"{t}/cvelist", "--kev", f"{t}/kev.json",
+                            "--today", today, "--lookback", "2", "--root", f"{t}/repo",
+                            "--issues-out", f"{t}/issues.json", *extra],
+                           cwd=ROOT, capture_output=True, text=True, env=BASE_ENV)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        with open(f"{t}/repo/watchlist.json") as fh:
+            wl = json.load(fh)
+        with open(f"{t}/issues.json") as fh:
+            iss = json.load(fh)
+        return wl, iss
+
+    def item(self, wl, cve):
+        return next(i for i in wl["items"] + wl["closed"] if cve in i["cves"])
+
+    def test_lifecycle(self):
+        with tempfile.TemporaryDirectory() as t:
+            build(t)
+            os.makedirs(f"{t}/repo")
+            _write_json(f"{t}/repo/watchlist.json", {"version": 1, "items": []})
+
+            # Windows bug lands quiet: light duty with a recheck date and an owner.
+            wl, iss = self.run_daily(t, "2026-09-16")
+            w = self.item(wl, "CVE-2026-90002")
+            self.assertEqual((w["status"], w["rung"]), ("watching", 0))
+            self.assertTrue(w["recheck_by"] and w["owner"] == "Steven" and w["expires"] is None)
+
+            # SonicWall advisory with a same-day KEV sibling: needs action, and an issue.
+            wl, iss = self.run_daily(t, "2026-11-07")
+            sw = self.item(wl, "CVE-2026-19868")
+            self.assertEqual(sw["status"], "needs action")
+            self.assertTrue(any("Brief needed" in i["title"] for i in iss))
+            # ...and the quiet Windows bug has cleared as held.
+            self.assertEqual(self.item(wl, "CVE-2026-90002")["status"], "held")
+
+            # Java4Shell arrives quiet, then lands on KEV: escalation.
+            wl, _ = self.run_daily(t, "2026-11-18")
+            self.assertEqual(self.item(wl, "CVE-2026-114938")["status"], "watching")
+            with open(f"{t}/kev.json") as fh:
+                kev = json.load(fh)
+            kev["vulnerabilities"].append({"cveID": "CVE-2026-114938", "vendorProject": "Oracle",
+                                           "dateAdded": "2026-11-19", "knownRansomwareCampaignUse": "Unknown"})
+            _write_json(f"{t}/kev.json", kev)
+            wl, iss = self.run_daily(t, "2026-11-19")
+            j = self.item(wl, "CVE-2026-114938")
+            self.assertEqual((j["status"], j["rung"]), ("needs action", 4))
+            self.assertEqual(j["history"][-1]["note"], "escalated from rung 0")
+            self.assertTrue(any(i["title"].startswith("[sick-call] Rung up") for i in iss))
+
+            # Accepted risk comes back when it expires.
+            for i in wl["items"]:
+                if "CVE-2026-114938" in i["cves"]:
+                    i.update(status="accepted", expires="2026-11-25")
+            _write_json(f"{t}/repo/watchlist.json", wl)
+            wl, iss = self.run_daily(t, "2026-11-26")
+            self.assertEqual(self.item(wl, "CVE-2026-114938")["status"], "needs action")
+            self.assertTrue(any("Acceptance expired" in i["title"] for i in iss))
+
+            # Binnacle List is written, with its sections.
+            with open(f"{t}/repo/BINNACLE.md") as fh:
+                md = fh.read()
+            self.assertIn("Confined to quarters", md)
+            self.assertIn("Light duty (", md)
+            self.assertIn("patch by the due date (or your SLA, if sooner)", md)
+            self.assertNotIn("owner", md.lower())                         # assignment lives in tickets
+            self.assertIn("On the list (", md)
+            self.assertNotIn("tripwire", md)
+
+    def test_light_duty(self):
+        """Edge gear with nothing public: a 7-day patch-by date, shown once, aging off after."""
+        with tempfile.TemporaryDirectory() as t:
+            build(t)
+            os.makedirs(f"{t}/repo")
+            _write_json(f"{t}/repo/watchlist.json", {"version": 1, "items": []})
+            wl, _ = self.run_daily(t, "2026-11-21")
+            wg = self.item(wl, "CVE-2026-81430")
+            self.assertEqual((wg["status"], wg["window"], wg["cve_count"]), ("light duty", "7 days", 3))
+            self.assertEqual(wg["due"], "2026-11-27")               # 7 days from disclosure, not from intake
+            with open(f"{t}/repo/BINNACLE.md") as fh:
+                self.assertIn("WatchGuard (Dimension): 3 CVEs", fh.read())
+            wl, _ = self.run_daily(t, "2026-12-10")
+            self.assertEqual(self.item(wl, "CVE-2026-81430")["status"], "window passed")
+
+    def test_age_off_config(self):
+        """Public list ages off; a working copy with null keeps items until someone closes them."""
+        with tempfile.TemporaryDirectory() as t:
+            build(t)
+            for name, cfg, expect in (("public", None, "window passed"),
+                                      ("worklist", {"age_off": {"needs_action_days": None}}, "needs action")):
+                os.makedirs(f"{t}/{name}")
+                _write_json(f"{t}/{name}/watchlist.json", {"version": 1, "items": []})
+                env = dict(BASE_ENV)
+                if cfg:
+                    _write_json(f"{t}/{name}.json", cfg); env["SICK_CALL_CONFIG"] = f"{t}/{name}.json"
+                for day in ("2026-11-07", "2026-12-20"):
+                    subprocess.run([sys.executable, "tools/daily.py", "--cvelist", f"{t}/cvelist", "--kev", f"{t}/kev.json",
+                                    "--today", day, "--lookback", "2", "--root", f"{t}/{name}"],
+                                   cwd=ROOT, check=True, capture_output=True, env=env)
+                with open(f"{t}/{name}/watchlist.json") as fh:
+                    wl = json.load(fh)
+                sw = next(i for i in wl["items"] + wl["closed"] if "CVE-2026-19868" in i["cves"])
+                self.assertEqual(sw["status"], expect, name)
+
+    def test_commandos(self):
+        """Repeat offenders on the Binnacle List, and the standalone hall-of-fame report."""
+        with tempfile.TemporaryDirectory() as t:
+            build(t)
+            os.makedirs(f"{t}/repo")
+            _write_json(f"{t}/repo/watchlist.json", {"version": 1, "items": []})
+            self.run_daily(t, "2026-11-21", "--lookback", "30")
+            with open(f"{t}/repo/BINNACLE.md") as fh:
+                md = fh.read()
+            self.assertIn("## Sick call commandos", md)
+            self.assertIn("days of history so far", md)                 # 30-day seed, 90-day window: says so
+            self.assertIn("| SonicWall | 1 | 4 | 1 | 1 | 0 |", md)       # one bulletin, 4 CVEs, short window, 1 on KEV same day
+            out = subprocess.run([sys.executable, "tools/commandos.py", "--kev", f"{t}/kev.json",
+                                  "--log-dir", f"{t}/repo/log", "--since", "2026-10-01", "--until", "2026-11-21"],
+                                 cwd=ROOT, capture_output=True, text=True, check=True, env=BASE_ENV).stdout
+            self.assertIn("# Sick call hall of fame: 2026-10-01 to 2026-11-21", out)
+            self.assertIn("Counts only, no commentary.", out)
+
+    def test_manual_request(self):
+        with tempfile.TemporaryDirectory() as t:
+            build(t)
+            os.makedirs(f"{t}/repo")
+            _write_json(f"{t}/repo/watchlist.json", {"version": 1, "items": []})
+            wl, _ = self.run_daily(t, "2026-11-20", "--requested", "CVE-2026-90001", "--requested-by", "Steven")
+            k = self.item(wl, "CVE-2026-90001")                       # Kafka: not SMB, in by request
+            self.assertEqual(k["requested_by"], "Steven")
 
 if __name__ == "__main__":
     unittest.main()

@@ -44,6 +44,9 @@ def build(root):
     rec("CVE-2026-70004", "2026-10-13", "Microsoft", "Windows 11", 9.8, None, ("2026-10-13", "none"), assigner="microsoft")
     rec("CVE-2026-84869", "2026-09-20", "ConnectWise", "ScreenConnect", 9.0, None, ("2026-09-20", "none"))
     rec("CVE-2026-67277", "2026-09-02", "MikroTik", "RouterOS", 8.0, None, ("2026-09-02", "none"))
+    for n in ("81430", "81434", "86126"):                       # one bulletin, published as per-CVE pages
+        rec("CVE-2026-" + n, "2026-11-20", "WatchGuard", "Dimension", 7.5,
+            f"https://psirt.watchguard.com/CVE-2026-{n}", ("2026-11-20", "none"))
     kev = {"vulnerabilities": [
         {"cveID": "CVE-2026-84869", "vendorProject": "ConnectWise", "dateAdded": "2026-09-23", "knownRansomwareCampaignUse": "Unknown"},
         {"cveID": "CVE-2026-70002", "vendorProject": "Microsoft", "dateAdded": "2026-11-10", "knownRansomwareCampaignUse": "Unknown"},

@@ -1,5 +1,5 @@
 {
-  "_comment": "Copy to sick-call.local.json (git-ignored) and edit. Anything you leave out keeps the baseline.",
+  "_comment": "Copy to sick-call.local.json (git-ignored) for local runs, or commit it as sick-call.worklist.json in a private working copy. Anything you leave out keeps the baseline.",
   "publisher": {
     "name": "Example MSP",
     "reviewer": "Jane Doe"
@@ -44,5 +44,9 @@
   "remote_access_floor": {
     "enabled": true,
     "floor_rung": 3
+  },
+  "age_off": {
+    "needs_action_days": null,
+    "light_duty_days": null
   }
 }

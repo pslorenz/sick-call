@@ -164,7 +164,7 @@ def main():
         f = facts(rec)
         # Scheduled releases first (one advisory per Patch Tuesday, Chrome release, Oracle CPU...),
         # then a shared vendor advisory URL, else the CVE stands alone.
-        key = fm.release_key(f["assigner"], f["published"]) or (f["advisories"][0] if f["advisories"] else cid)
+        key = fm.advisory_key(cid, f["assigner"], f["published"], f["advisories"], f["pairs"])
         groups[key][cid] = f
 
     # EPSS: one batch of calls per disclosure day (not per advisory), cached so reruns are offline.

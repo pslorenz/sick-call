@@ -1,0 +1,86 @@
+# SPDX-License-Identifier: Apache-2.0
+# sick-call daily run: intake, watch list, Binnacle List. No LLM, no secrets beyond the built-in token.
+name: daily
+
+on:
+  schedule:
+    - cron: "17 10 * * *"        # 10:17 UTC, before the US workday starts
+  workflow_dispatch:
+    inputs:
+      requested:
+        description: "Run one CVE through regardless of the SMB filter (e.g. CVE-2026-84869)"
+        required: false
+      requested_by:
+        description: "Who asked"
+        required: false
+        default: "manual run"
+
+permissions:
+  contents: write      # commit watchlist.json, BINNACLE.md, log/
+  issues: write        # open issues for new action items and escalations
+
+concurrency:
+  group: daily
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Tests first
+        run: python3 -m unittest discover -s tests -t .
+        env:
+          SICK_CALL_CONFIG: none
+
+      - name: Fetch CVE records (this year and last)
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/CVEProject/cvelistV5 /tmp/cvelist
+          git -C /tmp/cvelist sparse-checkout set "cves/$(date -u +%Y)" "cves/$(date -u -d '1 year ago' +%Y)"
+
+      - name: Fetch KEV and Nuclei templates
+        run: |
+          curl -fsSL --retry 3 -o /tmp/kev.json https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json
+          git clone --depth 1 https://github.com/projectdiscovery/nuclei-templates /tmp/nuclei
+
+      - name: Intake, watch, Binnacle List
+        env:
+          REQUESTED: ${{ github.event.inputs.requested }}
+          REQUESTED_BY: ${{ github.event.inputs.requested_by }}
+        run: |
+          # A private working copy commits its settings as sick-call.worklist.json (see README).
+          if [ -f sick-call.worklist.json ]; then export SICK_CALL_CONFIG=sick-call.worklist.json; fi
+          args=(--cvelist /tmp/cvelist --kev /tmp/kev.json --nuclei /tmp/nuclei --issues-out /tmp/issues.json)
+          if [ -n "$REQUESTED" ]; then args+=(--requested "$REQUESTED" --requested-by "$REQUESTED_BY"); fi
+          python3 tools/daily.py "${args[@]}"
+
+      - name: Commit the record
+        run: |
+          git config user.name "sick-call bot"
+          git config user.email "sick-call-bot@users.noreply.github.com"
+          git add watchlist.json BINNACLE.md log/
+          git diff --cached --quiet || git commit -m "Binnacle List $(date -u +%F)"
+          git push
+
+      - name: Open issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create sick-call --color 1f6feb --force >/dev/null
+          for l in brief rung acceptance; do gh label create "$l" --force >/dev/null; done
+          python3 - <<'PY'
+          import json, subprocess
+          for i in json.load(open("/tmp/issues.json")):
+              existing = subprocess.run(["gh", "issue", "list", "--state", "open", "--search", f'"{i["title"]}" in:title',
+                                         "--json", "number", "--jq", "length"], capture_output=True, text=True).stdout.strip()
+              if existing not in ("", "0"):
+                  continue
+              subprocess.run(["gh", "issue", "create", "--title", i["title"], "--body", i["body"],
+                              *sum((["--label", l] for l in i["labels"]), [])], check=True)
+          PY

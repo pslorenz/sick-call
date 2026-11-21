@@ -111,6 +111,38 @@ REMOTE_ACCESS_WORDS = ["screenconnect", "connectwise control", "kaseya vsa", "te
 # Patch Tuesday and made its day 0 too early. "month" is still available for vendors that dribble.
 RELEASE_GROUPS = {"microsoft": "day", "adobe": "day", "oracle": "day", "chrome": "day", "mozilla": "day"}
 
+def canonical_vendor(vendor):
+    """'Citrix NetScaler' and 'Citrix', or 'Ubiquiti Inc' and 'Ubiquiti', are one vendor for grouping.
+    Uses the vendor names in the baseline tables; anything unknown is kept as written."""
+    v = (vendor or "").strip().lower()
+    known = sorted(set(SMB_VENDOR_PRODUCTS) | set(EDGE_VENDOR_PRODUCTS) | set(REMOTE_ACCESS_VENDOR_PRODUCTS),
+                   key=len, reverse=True)
+    hit = _word_match(known, v)
+    return max(hit, key=len) if hit else v
+
+def advisory_key(cid, assigner, published, advisories, pairs):
+    """One key per advisory, used by the backtest and the daily run alike:
+    1. a scheduled release (Patch Tuesday, Chrome, Oracle CPU...),
+    2. else a shared vendor-advisory URL (per-CVE pages don't count),
+    3. else one vendor's bulletin day: every CVE from that vendor published that day,
+    4. else the CVE on its own."""
+    import re as _re
+    k = release_key(assigner, published)
+    if k:
+        return k
+    # A per-CVE page (psirt.vendor.com/CVE-2026-81434, or .../cve2026125878-...) isn't a shared
+    # bulletin; only URLs that don't name this CVE can tie siblings together.
+    norm = lambda x: _re.sub(r"[^a-z0-9]", "", x.lower())
+    shared = [u for u in advisories if norm(cid) not in norm(u)]
+    if shared:
+        return shared[0]
+    vendors = {canonical_vendor(v) for v, _ in pairs if v and v.strip()}
+    if published and len(vendors) == 1:
+        slug = _re.sub(r"[^a-z0-9]+", "-", vendors.pop()).strip("-")
+        if slug:
+            return f"{slug}-{published.isoformat()}"
+    return cid
+
 def release_key(assigner, published):
     """Advisory key for a scheduled-release CVE, or None if its CNA doesn't ship on a schedule."""
     rule = RELEASE_GROUPS.get((assigner or "").lower())
@@ -133,6 +165,11 @@ WINDOW_DAYS = {"now, hours not days": 0, "confirm inventory today": 0, "24 hours
 # that condition and landing on KEV in 5 days, so the default is now 0. MSPs can raise it in config.
 EDGE_FLOOR = {"enabled": True, "min_vendor_kev_12mo": 0, "floor_rung": 2}
 REMOTE_ACCESS_FLOOR = {"enabled": True, "floor_rung": 3}   # internet-facing remote access: at least 72 hours
+
+# How long closed-out-by-nobody items stay on the Binnacle List past their due date. The public list is a
+# reference feed, not anyone's worklist, so it ages things off. A working copy where people mark items
+# done can set either value to null: then nothing leaves until a person closes it.
+AGE_OFF = {"needs_action_days": 14, "light_duty_days": 7}
 PANIC_CVSS = 9.0          # what a peer group treats as drop-everything without reading further
 PUBLISHER = {"name": "sick-call", "reviewer": "Steven"}
 
@@ -170,6 +207,7 @@ def _load_config():
         WINDOWS[int(rung)] = vals
     EDGE_FLOOR.update(c.get("edge_floor", {}))
     REMOTE_ACCESS_FLOOR.update(c.get("remote_access_floor", {}))
+    AGE_OFF.update(c.get("age_off", {}))
     PANIC_CVSS = float(c.get("panic_cvss", PANIC_CVSS))
     PUBLISHER = {**PUBLISHER, **c.get("publisher", {})}
     return path
