@@ -29,7 +29,8 @@ from backtest import d, load_kev          # noqa: E402
 
 SHORT_WINDOW_DAYS = 7
 RULE = ("Ranked by short-window bulletins (confined to quarters or light duty), then CVEs on CISA KEV, then total CVEs. "
-        "SMB-relevant advisories only, counted by disclosure date. Same rule for every vendor.")
+        "SMB-relevant advisories only, counted by disclosure date. A bulletin that names several vendors counts once "
+        "for each of them. Same rule for every vendor.")
 
 
 def read_logs(log_dir, start, end):
@@ -46,28 +47,36 @@ def read_logs(log_dir, start, end):
     return list(latest.values())
 
 
+def _keys(record):
+    return {fm.canonical_vendor(n) for n in record.get("vendors") or []}
+
+
 def tally(records, kev, end):
     by = defaultdict(lambda: {"names": Counter(), "bulletins": 0, "cves": 0, "short": 0, "kev": 0, "lags": []})
     for r in records:
         vendors = r.get("vendors") or []
         if not vendors:
             continue
-        key = fm.canonical_vendor(vendors[0])
-        v = by[key]
-        v["names"].update(vendors)
-        v["bulletins"] += 1
-        v["cves"] += r.get("cve_count", len(r.get("cves", [])))
-        if r.get("rung", 0) >= 3 or r.get("window_days", 99) <= SHORT_WINDOW_DAYS:
-            v["short"] += 1
-        day0 = d(r["day0"])
-        for c in r.get("cves", []):
-            k = kev.get(c)
-            if k and k["added"] <= end:
-                v["kev"] += 1
-                v["lags"].append(max(0, (k["added"] - day0).days))
+        day0 = d(r.get("day0") or r.get("scored_on"))
+        short = r.get("rung", 0) >= 3 or r.get("window_days", 99) <= SHORT_WINDOW_DAYS
+        # Credit every vendor the bulletin names, not whichever sorts first alphabetically.
+        spellings = defaultdict(list)
+        for name in vendors:
+            spellings[fm.canonical_vendor(name)].append(name)
+        for key, names in spellings.items():
+            v = by[key]
+            v["names"].update(names)
+            v["bulletins"] += 1
+            v["cves"] += r.get("cve_count", len(r.get("cves", [])))
+            v["short"] += short
+            for c in r.get("cves", []):
+                k = kev.get(c)
+                if k and k["added"] <= end and day0:
+                    v["kev"] += 1
+                    v["lags"].append(max(0, (k["added"] - day0).days))
     rows = []
     for key, v in by.items():
-        rows.append({"vendor": v["names"].most_common(1)[0][0], "bulletins": v["bulletins"], "cves": v["cves"],
+        rows.append({"key": key, "vendor": v["names"].most_common(1)[0][0], "bulletins": v["bulletins"], "cves": v["cves"],
                      "short_window": v["short"], "kev_cves": v["kev"],
                      "median_days_to_kev": statistics.median(v["lags"]) if v["lags"] else None})
     rows.sort(key=lambda x: (-x["short_window"], -x["kev_cves"], -x["cves"], x["vendor"].lower()))
@@ -86,7 +95,7 @@ def table(rows):
 def binnacle_section(log_dir, kev, today, days=90, top=5):
     records = read_logs(log_dir, today - dt.timedelta(days=days), today)
     rows = tally(records, kev, today)[:top]
-    first = min((d(r["day0"]) for r in records), default=today)
+    first = min((d(r.get("day0") or r.get("scored_on")) for r in records), default=today)
     span = (today - first).days + 1
     have = "" if span >= days else f" ({span} days of history so far)"
     out = [f"## Sick call commandos ({len(rows)}): the last {days} days{have}", "",
@@ -95,13 +104,14 @@ def binnacle_section(log_dir, kev, today, days=90, top=5):
 
 
 def report(log_dir, kev, start, end, top):
-    rows = tally(read_logs(log_dir, start, end), kev, end)
+    records = read_logs(log_dir, start, end)
+    rows = tally(records, kev, end)
     shown = rows[:top]
-    total_b = sum(r["bulletins"] for r in rows)
+    total_b = len({r["advisory"] for r in records})
     out = [f"# Sick call hall of fame: {start} to {end}", "",
            "The vendors that kept turning up at sick call. Counts only, no commentary.", "",
            f"{total_b:,} SMB-relevant bulletins from {len(rows)} vendors in this period. "
-           f"The top {len(shown)} accounted for {sum(r['bulletins'] for r in shown):,} of them.", ""]
+           f"The top {len(shown)} turned up in {len({x['advisory'] for x in records if _keys(x) & {r['key'] for r in shown}}):,} of them.", ""]
     out += table(shown)
     out += ["", f"**How the list is made.** {RULE} \"Short-window\" means the bulletin needed action inside "
             "seven days: exploited, weaponized, or internet-facing edge or remote-access gear. "
@@ -120,7 +130,7 @@ def main():
     ap.add_argument("--top", type=int, default=10)
     ap.add_argument("--out", help="write markdown here instead of printing")
     a = ap.parse_args()
-    end = d(a.until) if a.until else dt.date.today()
+    end = d(a.until) if a.until else dt.datetime.now(dt.timezone.utc).date()
     start = d(a.since) if a.since else end - dt.timedelta(days=a.days)
     md = report(a.log_dir, load_kev(a.kev), start, end, a.top)
     if a.out:

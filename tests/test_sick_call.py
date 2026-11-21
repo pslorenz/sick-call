@@ -345,6 +345,21 @@ class Daily(unittest.TestCase):
             self.assertIn("# Sick call hall of fame: 2026-10-01 to 2026-11-21", out)
             self.assertIn("Counts only, no commentary.", out)
 
+    def test_same_day_rerun_keeps_log(self):
+        """A 30-day seed and a 2-day re-run on the same day: the log keeps both."""
+        import gzip
+        with tempfile.TemporaryDirectory() as t:
+            build(t)
+            os.makedirs(f"{t}/repo")
+            _write_json(f"{t}/repo/watchlist.json", {"version": 1, "items": []})
+            self.run_daily(t, "2026-11-21", "--lookback", "30")
+            self.run_daily(t, "2026-11-21")                              # default 2-day lookback in run_daily
+            with gzip.open(f"{t}/repo/log/2026-11-21.jsonl.gz", "rt") as fh:
+                advisories = {json.loads(l)["advisory"] for l in fh}
+            self.assertTrue(any("sonicwall" in x.lower() or "SNWLID" in x for x in advisories), advisories)
+            with open(f"{t}/repo/BINNACLE.md") as fh:
+                self.assertIn("| SonicWall |", fh.read())
+
     def test_manual_request(self):
         with tempfile.TemporaryDirectory() as t:
             build(t)

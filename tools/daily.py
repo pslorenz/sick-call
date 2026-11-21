@@ -341,8 +341,19 @@ def run(a):
     with open(wl_path, "w") as fh:
         json.dump(wl, fh, indent=1)
     os.makedirs(os.path.join(a.root, "log"), exist_ok=True)
-    with gzip.open(os.path.join(a.root, "log", f"{today.isoformat()}.jsonl.gz"), "wt") as fh:
-        fh.writelines(json.dumps(r) + "\n" for r in log)
+    # One file per day. A second run on the same day (a manual lookup, a re-run) merges into it
+    # instead of replacing it, so a 30-day seed isn't wiped by the next 3-day run.
+    log_path = os.path.join(a.root, "log", f"{today.isoformat()}.jsonl.gz")
+    merged = {}
+    if os.path.exists(log_path):
+        with gzip.open(log_path, "rt") as fh:
+            for line in fh:
+                r = json.loads(line)
+                merged[r["advisory"]] = r
+    for r in log:
+        merged[r["advisory"]] = r
+    with gzip.open(log_path, "wt") as fh:
+        fh.writelines(json.dumps(r) + "\n" for r in merged.values())
     import commandos
     extra = commandos.binnacle_section(os.path.join(a.root, "log"), kev, today)
     with open(os.path.join(a.root, "BINNACLE.md"), "w") as fh:

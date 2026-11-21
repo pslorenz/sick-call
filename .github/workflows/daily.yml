@@ -14,6 +14,10 @@ on:
         description: "Who asked"
         required: false
         default: "manual run"
+      lookback:
+        description: "Days of disclosures to take in (default 3; 30 to re-seed)"
+        required: false
+        default: "3"
 
 permissions:
   contents: write      # commit watchlist.json, BINNACLE.md, log/
@@ -53,10 +57,11 @@ jobs:
         env:
           REQUESTED: ${{ github.event.inputs.requested }}
           REQUESTED_BY: ${{ github.event.inputs.requested_by }}
+          LOOKBACK: ${{ github.event.inputs.lookback || '3' }}
         run: |
           # A private working copy commits its settings as sick-call.worklist.json (see README).
           if [ -f sick-call.worklist.json ]; then export SICK_CALL_CONFIG=sick-call.worklist.json; fi
-          args=(--cvelist /tmp/cvelist --kev /tmp/kev.json --nuclei /tmp/nuclei --issues-out /tmp/issues.json)
+          args=(--cvelist /tmp/cvelist --kev /tmp/kev.json --nuclei /tmp/nuclei --issues-out /tmp/issues.json --lookback "$LOOKBACK")
           if [ -n "$REQUESTED" ]; then args+=(--requested "$REQUESTED" --requested-by "$REQUESTED_BY"); fi
           python3 tools/daily.py "${args[@]}"
 

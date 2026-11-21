@@ -22,6 +22,7 @@ The daily pipeline. The ladder is unchanged from 0.1.0.
 - A risk acceptance is revoked when the item climbs to rung 3 or higher. The acceptance is kept in `revoked_acceptance` and noted in the history and the Rung up issue.
 - Sick call commandos credit every vendor a bulletin names, not the first one alphabetically.
 - `--today` defaults to the UTC date, matching GitHub Actions.
+- Manual workflow runs take a `lookback` input (default 3), so the log can be re-seeded from GitHub.
 - Workflows use actions/checkout@v5 and actions/setup-python@v6 (Node 24).
 
 ### Fixed
@@ -32,6 +33,7 @@ The daily pipeline. The ladder is unchanged from 0.1.0.
 - The commandos table no longer fails on log records without `day0`.
 - Binnacle footer says "Window passed" (it counts needs action and light duty items).
 - An item's exploited-CVE list now updates when another CVE in the advisory lands on KEV without changing the rung.
+- A second daily run on the same day now merges into that day's log instead of replacing it. Before, a re-run or manual lookup wiped the day's records, which emptied the commandos table after a seed.
 - `grep` in advisory expansion is guarded with `--`.
 
 ## [0.1.0] - unreleased
