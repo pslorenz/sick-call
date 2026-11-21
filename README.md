@@ -6,6 +6,9 @@
 
 Every named bug shows up at sick call claiming to be dying. Most go back to duty with Motrin and water. A few need extra care. sick-call is how we tell the vulnerabilities apart, in writing, before the group chat catches fire.
 
+> [!WARNING]
+> Experimental personal project; not a supported feed; rungs may change without notice. Review output before using data herein to make risk decisions.
+
 Patching everything, every time, the moment it's announced is no longer a plan. sick-call puts each advisory on a six-rung ladder built only from evidence, says plainly what we're doing about it, and watches the ones we defer so "not today" never turns into "forgot."
 
 > **v0.1 alpha; the daily run (v0.2) has been live since 2026-11-21** The ladder works and the backtest is published, misses included. Briefs are drafted by hand with the skill and reviewed before they go out. Expect the ladder and file formats to change before 1.0; the [changelog](CHANGELOG.md) will say what changed.
