@@ -43,7 +43,7 @@ Rechecks due in the next 7 days: 17.
 
 ## Sick call commandos (5): the last 90 days (4 days of history so far)
 
-The vendors that keep turning up at sick call. Ranked by short-window bulletins (needs action or light duty), then CVEs on CISA KEV, then total CVEs. SMB-relevant advisories only, counted by disclosure date. Same rule for every vendor.
+The vendors that keep turning up at sick call. Ranked by short-window bulletins (confined to quarters or light duty), then CVEs on CISA KEV, then total CVEs. SMB-relevant advisories only, counted by disclosure date. Same rule for every vendor.
 
 | Vendor | Bulletins | CVEs | Short-window | CVEs on KEV | Median days to KEV |
 | --- | --- | --- | --- | --- | --- |
@@ -56,6 +56,6 @@ The vendors that keep turning up at sick call. Ranked by short-window bulletins 
 
 ## Cleared (16): this week
 
-Deferral held: 0. Light duty window passed: 16. Marked done: 0.
+Deferral held: 0. Window passed: 16. Marked done: 0.
 
 The full record, with every item's history, is in [watchlist.json](watchlist.json).
