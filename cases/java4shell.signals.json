@@ -1,0 +1,35 @@
+{
+  "cve_id": "CVE-2026-114938",
+  "name": "Java4Shell",
+  "cve_record": "cases/CVE-2026-114938.json",
+  "evidence": {
+    "poc_crash_or_corruption": true,
+    "researcher_impact_demo": true,
+    "public_working_exploit": null,
+    "kev": false,
+    "vendor_confirms_itw": false,
+    "mass_scanning_observed": false,
+    "epss_percentile": 0.6075
+  },
+  "hype": {
+    "branded_name": true,
+    "dedicated_site_or_logo": true,
+    "famous_comparison": true,
+    "absolute_language": true,
+    "media_articles_72h": 30,
+    "researcher_score": 9.2
+  },
+  "exposure": "internet",
+  "products": [
+    "OpenJDK",
+    "Jira",
+    "Confluence",
+    "Keycloak",
+    "Jenkins"
+  ],
+  "smb_relevance": "indirect",
+  "smb_note": "Java bundled in vendor apps and appliances; few SMBs self-host Jira or Keycloak",
+  "secondary_sources": [
+    "OpenJDK advisory did not load; 8/11 status from secondary reports"
+  ]
+}

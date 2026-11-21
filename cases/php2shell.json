@@ -1,0 +1,2 @@
+{"dataType":"CVE_RECORD","containers":{"cna":{"metrics":[{"cvssV4_0":{"baseScore":9.2,"vectorString":"CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"}}]},
+"adp":[{"providerMetadata":{"shortName":"CISA-ADP"},"metrics":[{"other":{"type":"ssvc","content":{"options":[{"Exploitation":"active"},{"Automatable":"no"},{"Technical Impact":"total"}]}}},{"other":{"type":"kev","content":{"dateAdded":"2026-10-26"}}}]}]}}

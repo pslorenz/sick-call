@@ -1,0 +1,13 @@
+backtest/out/
+cvelistV5/
+nuclei-templates/
+kev.json
+__pycache__/
+*.pyc
+# Client data never lives here
+*fleet*.csv
+*exposure*.csv
+*-j4s.csv
+
+# Local customization (each MSP keeps its own)
+sick-call.local.json

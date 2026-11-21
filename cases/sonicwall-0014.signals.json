@@ -1,0 +1,16 @@
+{
+  "name": "SonicWall SNWLID-2026-0014 (SonicOS)",
+  "products": ["SonicWall SonicOS"],
+  "cves": [
+    {"cve_id": "CVE-2026-107154", "evidence": {"ssvc_exploitation": "none", "epss_percentile": 0.537}},
+    {"cve_id": "CVE-2026-107155", "evidence": {"ssvc_exploitation": "none", "epss_percentile": 0.559}},
+    {"cve_id": "CVE-2026-82308",  "evidence": {"ssvc_exploitation": "none", "ssvc_automatable": "yes", "epss_percentile": 0.494}},
+    {"cve_id": "CVE-2026-19868",  "evidence": {"kev": true, "vendor_confirms_itw": true}}
+  ],
+  "conflicts": [
+    "CVE-2026-82308: CVE record and SecNews say SSL-VPN heap overflow, CVSS 7.5; CSO lists it as a TACACS+ overflow at 5.9",
+    "Gen8 fix: CVE records list 8.2.2-8015 as affected; Canadian Cyber Centre says only builds before 8.2.2-8015 are affected"
+  ],
+  "hype": {"media_articles_72h": 10},
+  "exposure": null
+}

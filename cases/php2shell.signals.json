@@ -1,0 +1,40 @@
+{
+  "name": "PHP2Shell",
+  "cves": [
+    {
+      "cve_id": "CVE-2026-109618",
+      "cve_record": "cases/php2shell.json",
+      "evidence": {
+        "poc_crash_or_corruption": true,
+        "researcher_impact_demo": true,
+        "public_working_exploit": "Metasploit PR #22139, public kits",
+        "epss_percentile": 0.99999,
+        "mass_scanning_observed": "Fastly and F5 report mass scanning with public kits"
+      }
+    },
+    {
+      "cve_id": "CVE-2026-109619",
+      "evidence": {
+        "researcher_impact_demo": true,
+        "public_working_exploit": "public PHP2Shell kits",
+        "mass_scanning_observed": "F5: most attack volume targets this CVE"
+      }
+    }
+  ],
+  "conflicts": [
+    "Wiz saw no successful exploitation in its telemetry; BleepingComputer reports confirmed success against mod_php 8.4.26"
+  ],
+  "hype": {
+    "branded_name": true,
+    "dedicated_site_or_logo": true,
+    "famous_comparison": true,
+    "media_articles_72h": 30
+  },
+  "exposure": "internet",
+  "products": [
+    "PHP",
+    "WordPress",
+    "Drupal",
+    "Joomla"
+  ]
+}
