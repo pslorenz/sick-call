@@ -18,6 +18,21 @@ The daily pipeline. The ladder is unchanged from 0.1.0.
 
 ### Changed
 - Advisory grouping: CVEs with no shared advisory URL (none, or only per-CVE pages like psirt.watchguard.com/CVE-… or …/cve2026125878-…) are grouped by vendor and publish day, one bulletin per vendor per day (13 WatchGuard Dimension CVEs on one day are one advisory, not 13). Applies to the backtest too, so 0.1.0's published counts were made with the earlier grouping.
+- Requested lookups (`--requested`) bring in the whole advisory and start the window on the request date, so an old exploited CVE lands on the list instead of aging straight off.
+- A risk acceptance is revoked when the item climbs to rung 3 or higher. The acceptance is kept in `revoked_acceptance` and noted in the history and the Rung up issue.
+- Sick call commandos credit every vendor a bulletin names, not the first one alphabetically.
+- `--today` defaults to the UTC date, matching GitHub Actions.
+- Workflows use actions/checkout@v5 and actions/setup-python@v6 (Node 24).
+
+### Fixed
+- `smb_products_add` was ignored when the same config also removed a baseline product.
+- CVEs added to an advisory after it was already on the list are now merged into the open item and rescored. Previously they were dropped.
+- Nuclei templates with suffixed names (`CVE-2026-12345-rce.yaml`) are matched in the daily run. All three tools share one matcher, which also stops CVE-2026-1234 from matching CVE-2026-12345.
+- Backtest vendor KEV counts used the first word of the vendor name ("palo" for Palo Alto Networks).
+- The commandos table no longer fails on log records without `day0`.
+- Binnacle footer says "Window passed" (it counts needs action and light duty items).
+- An item's exploited-CVE list now updates when another CVE in the advisory lands on KEV without changing the rung.
+- `grep` in advisory expansion is guarded with `--`.
 
 ## [0.1.0] - unreleased
 

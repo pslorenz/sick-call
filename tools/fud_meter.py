@@ -27,7 +27,7 @@ Usage:
 Signals for edge gear: "edge_device": true and "vendor" (KEV vendorProject name). With --fetch the
 meter counts that vendor's KEV entries from the last 12 months; offline, set "vendor_kev_12mo".
 """
-import argparse, json, os, sys, urllib.request
+import argparse, json, os, re, sys, urllib.request
 
 CVE_API = "https://cveawg.mitre.org/api/cve/{}"
 EPSS_API = "https://api.first.org/data/v1/epss?cve={}"
@@ -178,7 +178,7 @@ PUBLISHER = {"name": "sick-call", "reviewer": "Steven"}
 # repo root (git-ignored), or points SICK_CALL_CONFIG at another file. SICK_CALL_CONFIG=none
 # forces the baseline (the tests do this). See sick-call.example.json.
 def _load_config():
-    global SMB_PRODUCTS, EDGE_WORDS, PANIC_CVSS, PUBLISHER
+    global SMB_PRODUCTS, SMB_PRODUCTS_ADDED, EDGE_WORDS, PANIC_CVSS, PUBLISHER
     import os as _os
     path = _os.environ.get("SICK_CALL_CONFIG") or _os.path.join(
         _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), "sick-call.local.json")
@@ -186,7 +186,8 @@ def _load_config():
         return None
     c = json.load(open(path))
     drop = {x.lower() for x in c.get("smb_products_remove", [])}
-    SMB_PRODUCTS = [x for x in SMB_PRODUCTS if x not in drop] + [x.lower() for x in c.get("smb_products_add", [])]
+    SMB_PRODUCTS_ADDED = [x.lower() for x in c.get("smb_products_add", [])]
+    SMB_PRODUCTS = [x for x in SMB_PRODUCTS if x not in drop] + SMB_PRODUCTS_ADDED
     EDGE_WORDS = EDGE_WORDS + [x.lower() for x in c.get("edge_words_add", [])]
     for vendor, prods in c.get("smb_vendors_add", {}).items():
         SMB_VENDOR_PRODUCTS[vendor.lower()] = [x.lower() for x in prods]
@@ -212,7 +213,9 @@ def _load_config():
     PUBLISHER = {**PUBLISHER, **c.get("publisher", {})}
     return path
 
-_BASELINE_LEN = len(SMB_PRODUCTS)
+# Analyst additions, tracked on their own. Slicing SMB_PRODUCTS by the baseline length broke
+# as soon as a config removed one product and added another (same length, empty slice).
+SMB_PRODUCTS_ADDED = []
 CONFIG_PATH = _load_config()
 
 def _word_match(words, text):
@@ -245,7 +248,7 @@ def _pair_match(table, vendor, product):
 def smb_pair(vendor, product):
     """SMB match for structured data. Analyst additions in smb_products_add count for any vendor."""
     return _pair_match(SMB_VENDOR_PRODUCTS, vendor, product) or \
-        next((f"added: {w}" for w in _word_match(SMB_PRODUCTS[_BASELINE_LEN:], product)), None)
+        next((f"added: {w}" for w in _word_match(SMB_PRODUCTS_ADDED, product)), None)
 
 def edge_pair(vendor, product):
     return _pair_match(EDGE_VENDOR_PRODUCTS, vendor, product)
@@ -324,10 +327,19 @@ def parse_cve5(rec):
                 out["kev_adp"] = True
     return out
 
+_TEMPLATE_CVE = re.compile(r"(?<![0-9])(CVE-\d{4}-\d{4,})(?![0-9])", re.I)
+
+def template_cve(path):
+    """CVE id from a Nuclei template file name, or None. Handles suffixed names
+    (CVE-2026-12345-rce.yaml) and never lets CVE-2026-1234 match CVE-2026-12345.
+    Shared by fud_meter, daily and backtest so the three can't drift apart."""
+    m = _TEMPLATE_CVE.search(os.path.basename(path))
+    return m.group(1).upper() if m else None
+
 def nuclei_has(cve_id, root):
-    needle = cve_id.lower()
+    want = cve_id.upper()
     for dp, _, files in os.walk(os.path.expanduser(root)):
-        if any(f.lower().startswith(needle) and f.endswith(".yaml") for f in files):
+        if any(f.endswith(".yaml") and template_cve(f) == want for f in files):
             return True
     return False
 
@@ -386,7 +398,7 @@ def expand_advisory(items, cvelist_dir):
     added = []
     for url in urls:
         for yr in years:
-            out = subprocess.run(["grep", "-rlF", url, f"{cvelist_dir}/cves/{yr}"], capture_output=True, text=True).stdout
+            out = subprocess.run(["grep", "-rlF", "--", url, f"{cvelist_dir}/cves/{yr}"], capture_output=True, text=True).stdout
             for f in out.split():
                 cid = os.path.basename(f)[:-5]
                 if cid not in have:

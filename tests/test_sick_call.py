@@ -132,6 +132,33 @@ class LocalConfig(unittest.TestCase):
                                cwd=ROOT, capture_output=True, text=True, env={**os.environ, "SICK_CALL_CONFIG": cfg})
         self.assertNotEqual(r.returncode, 0)
 
+    def test_remove_one_add_one(self):
+        """Removing a baseline product and adding your own must still match the addition,
+        even for a vendor the vendor-anchored table has never heard of."""
+        with tempfile.TemporaryDirectory() as t:
+            cfg = os.path.join(t, "local.json")
+            _write_json(cfg, {"smb_products_remove": ["quickbooks"], "smb_products_add": ["dentrix"]})
+            out = subprocess.run([sys.executable, "-c",
+                                  "import sys; sys.path.insert(0, 'tools'); import fud_meter as fm; "
+                                  "print(fm.smb_pair('Henry Schein One', 'Dentrix Ascend'))"],
+                                 cwd=ROOT, capture_output=True, text=True, check=True,
+                                 env={**os.environ, "SICK_CALL_CONFIG": cfg}).stdout.strip()
+        self.assertEqual(out, "added: dentrix")
+
+class Nuclei(unittest.TestCase):
+    def test_template_names(self):
+        sys.path.insert(0, os.path.join(ROOT, "tools"))
+        import fud_meter as fm
+        self.assertEqual(fm.template_cve("http/cves/2026/CVE-2026-12345.yaml"), "CVE-2026-12345")
+        self.assertEqual(fm.template_cve("CVE-2026-12345-rce.yaml"), "CVE-2026-12345")
+        self.assertEqual(fm.template_cve("cve-2026-12345.yaml"), "CVE-2026-12345")
+        self.assertIsNone(fm.template_cve("wordpress-plugin-rce.yaml"))
+        with tempfile.TemporaryDirectory() as t:
+            for name in ("CVE-2026-12345-rce.yaml", "CVE-2026-123456.yaml"):
+                open(os.path.join(t, name), "w").close()
+            self.assertTrue(fm.nuclei_has("CVE-2026-12345", t))
+            self.assertFalse(fm.nuclei_has("CVE-2026-1234", t))      # prefix of another id: no match
+
 class Daily(unittest.TestCase):
     """The v0.2 daily run: intake, watch, escalation, follow-through, manual requests."""
 
@@ -203,6 +230,68 @@ class Daily(unittest.TestCase):
             self.assertIn("On the list (", md)
             self.assertNotIn("tripwire", md)
 
+    def test_late_sibling_merged(self):
+        """A vendor adds a CVE to a bulletin already on the list: it joins the open item."""
+        with tempfile.TemporaryDirectory() as t:
+            build(t)
+            os.makedirs(f"{t}/repo")
+            _write_json(f"{t}/repo/watchlist.json", {"version": 1, "items": []})
+            wl, _ = self.run_daily(t, "2026-11-07")
+            self.assertEqual(self.item(wl, "CVE-2026-19868")["cve_count"], 4)
+            with open(f"{t}/cvelist/cves/2026/107xxx/CVE-2026-107154.json") as fh:
+                late = json.load(fh)
+            late["cveMetadata"].update(cveId="CVE-2026-119999", datePublished="2026-11-08T18:00:00Z")
+            os.makedirs(f"{t}/cvelist/cves/2026/119xxx", exist_ok=True)
+            _write_json(f"{t}/cvelist/cves/2026/119xxx/CVE-2026-119999.json", late)
+            wl, _ = self.run_daily(t, "2026-11-09")
+            sw = self.item(wl, "CVE-2026-19868")
+            self.assertIn("CVE-2026-119999", sw["cves"])
+            self.assertEqual(sw["cve_count"], 5)
+            self.assertIn("added 1 CVE(s)", sw["history"][-1]["note"])
+            self.assertEqual(sum(1 for i in wl["items"] if "CVE-2026-119999" in i["cves"]), 1)   # no second item
+
+    def test_kev_list_updates_without_rung_jump(self):
+        """Already at rung 4: a second CVE landing on KEV still shows up on the item."""
+        with tempfile.TemporaryDirectory() as t:
+            build(t)
+            os.makedirs(f"{t}/repo")
+            _write_json(f"{t}/repo/watchlist.json", {"version": 1, "items": []})
+            wl, _ = self.run_daily(t, "2026-11-07")
+            self.assertEqual(self.item(wl, "CVE-2026-19868")["kev_cves"], ["CVE-2026-19868"])
+            with open(f"{t}/kev.json") as fh:
+                kev = json.load(fh)
+            kev["vulnerabilities"].append({"cveID": "CVE-2026-107154", "vendorProject": "SonicWall",
+                                           "dateAdded": "2026-11-08", "knownRansomwareCampaignUse": "Unknown"})
+            _write_json(f"{t}/kev.json", kev)
+            wl, iss = self.run_daily(t, "2026-11-08")
+            sw = self.item(wl, "CVE-2026-19868")
+            self.assertEqual(sw["kev_cves"], ["CVE-2026-107154", "CVE-2026-19868"])
+            self.assertEqual(sw["history"][-1]["note"], "now on KEV: CVE-2026-107154")
+            self.assertFalse(any("Rung up" in i["title"] for i in iss))      # same rung: no new issue
+
+    def test_acceptance_revoked_on_exploitation(self):
+        """An acceptance signed at rung 0 doesn't survive the bug landing on KEV."""
+        with tempfile.TemporaryDirectory() as t:
+            build(t)
+            os.makedirs(f"{t}/repo")
+            _write_json(f"{t}/repo/watchlist.json", {"version": 1, "items": []})
+            wl, _ = self.run_daily(t, "2026-11-18")
+            for i in wl["items"]:
+                if "CVE-2026-114938" in i["cves"]:
+                    i.update(status="accepted", owner="Client CFO", expires="2027-06-30")
+            _write_json(f"{t}/repo/watchlist.json", wl)
+            with open(f"{t}/kev.json") as fh:
+                kev = json.load(fh)
+            kev["vulnerabilities"].append({"cveID": "CVE-2026-114938", "vendorProject": "Oracle",
+                                           "dateAdded": "2026-11-19", "knownRansomwareCampaignUse": "Unknown"})
+            _write_json(f"{t}/kev.json", kev)
+            wl, iss = self.run_daily(t, "2026-11-19")
+            j = self.item(wl, "CVE-2026-114938")
+            self.assertEqual(j["status"], "needs action")
+            self.assertEqual(j["revoked_acceptance"]["owner"], "Client CFO")
+            self.assertIn("revoked at rung 4", j["history"][-1]["note"])
+            self.assertTrue(any("Risk acceptance revoked" in i["body"] for i in iss))
+
     def test_light_duty(self):
         """Edge gear with nothing public: a 7-day patch-by date, shown once, aging off after."""
         with tempfile.TemporaryDirectory() as t:
@@ -264,6 +353,21 @@ class Daily(unittest.TestCase):
             wl, _ = self.run_daily(t, "2026-11-20", "--requested", "CVE-2026-90001", "--requested-by", "Steven")
             k = self.item(wl, "CVE-2026-90001")                       # Kafka: not SMB, in by request
             self.assertEqual(k["requested_by"], "Steven")
+
+    def test_manual_request_old_exploited(self):
+        """Asking about an old, exploited CVE puts it on the list now instead of aging it straight off."""
+        with tempfile.TemporaryDirectory() as t:
+            build(t)
+            os.makedirs(f"{t}/repo")
+            _write_json(f"{t}/repo/watchlist.json", {"version": 1, "items": []})
+            wl, iss = self.run_daily(t, "2026-11-21", "--requested", "CVE-2026-70004", "--requested-by", "Steven")
+            ms = self.item(wl, "CVE-2026-70004")                       # Oct Patch Tuesday CVE, quiet: watching
+            self.assertEqual((ms["status"], ms["requested_by"]), ("watching", "Steven"))
+            wl, iss = self.run_daily(t, "2026-11-21", "--requested", "CVE-2026-70002", "--requested-by", "Steven")
+            nov = self.item(wl, "CVE-2026-70002")                      # Nov Patch Tuesday, exploited on release
+            self.assertEqual(nov["status"], "needs action")
+            self.assertEqual(nov["due"], "2026-11-22")                 # a window from today, not from Nov 10
+            self.assertEqual(nov["cve_count"], 3)                      # the whole release came with it
 
 if __name__ == "__main__":
     unittest.main()

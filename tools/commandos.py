@@ -7,7 +7,7 @@ commandos.py - the sick call commandos: vendors that keep turning up at sick cal
 Counts only, no commentary. Built from the daily intake log (log/*.jsonl.gz), SMB-relevant advisories
 only, dated by disclosure. The same rule applies to every vendor:
 
-  ranked by short-window bulletins (needs action or light duty), then CVEs on KEV, then total CVEs.
+  ranked by short-window bulletins (confined to quarters or light duty), then CVEs on KEV, then total CVEs.
 
 The daily run puts the rolling 90-day top 5 on the Binnacle List. Run it on its own for any period,
 for example the annual hall of fame for client reports:
@@ -28,7 +28,7 @@ import fud_meter as fm                    # noqa: E402
 from backtest import d, load_kev          # noqa: E402
 
 SHORT_WINDOW_DAYS = 7
-RULE = ("Ranked by short-window bulletins (needs action or light duty), then CVEs on CISA KEV, then total CVEs. "
+RULE = ("Ranked by short-window bulletins (confined to quarters or light duty), then CVEs on CISA KEV, then total CVEs. "
         "SMB-relevant advisories only, counted by disclosure date. Same rule for every vendor.")
 
 

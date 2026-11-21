@@ -95,9 +95,8 @@ def nuclei_dates(nuclei_dir):
         if line.startswith("@"):
             cur = d(line[1:])
         else:
-            m = re.search(r"(CVE-\d{4}-\d+)", line, re.I)
-            if m and cur:
-                cid = m.group(1).upper()
+            cid = fm.template_cve(line) if line.endswith(".yaml") else None
+            if cid and cur:
                 dates[cid] = min(dates.get(cid, cur), cur)
     return dates
 
@@ -212,7 +211,7 @@ def main():
         edge = any(fm.edge_pair(v, p) for v, p in pairs)
         remote = any(fm.remote_access_pair(v, p) for v, p in pairs)
         vendors = {k_["vendor"].lower() for c in members if (k_ := kev.get(c))} | \
-                  {p.split(" ")[0].lower() for p in products if p}
+                  {v.lower() for v, _ in pairs if v}              # full name: "palo alto networks", not "palo"
         vendor_kev = sum(1 for v in kev.values() if v["vendor"].lower() in vendors
                          and day0 - dt.timedelta(days=365) <= v["added"] < day0)
         epss = epss_by_day.get(day0 + dt.timedelta(days=1), {})

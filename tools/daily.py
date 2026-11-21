@@ -37,6 +37,7 @@ import fud_meter as fm                                        # noqa: E402  (loa
 from backtest import d, load_kev, records_in_window, facts    # noqa: E402
 
 OPEN = ("needs action", "light duty", "watching", "accepted")
+REVOKE_RUNG = 3      # a rung jump to Weaponized or higher cancels a risk acceptance
 SHORT_WINDOW_DAYS = 7        # a window this short is a patch-by date, not a deferral
 # Age-off after the due date comes from fud_meter.AGE_OFF (config key "age_off"); None means never.
 RECHECK_MAX_DAYS = 30        # nobody's deferral goes longer than this without a person looking at it
@@ -62,7 +63,9 @@ def nuclei_present(nuclei_dir):
     if not nuclei_dir:
         return found
     for path in glob.iglob(os.path.join(nuclei_dir, "**", "CVE-*.yaml"), recursive=True):
-        found.add(os.path.basename(path)[:-5].upper())
+        cid = fm.template_cve(path)
+        if cid:
+            found.add(cid)
     return found
 
 
@@ -153,6 +156,10 @@ def status_for(rung, window_days):
 def new_item(key, members, s, today, requested_by=None):
     day0 = min(f["published"] for f in members.values())
     due = day0 + dt.timedelta(days=s["window_days"])        # the clock starts at disclosure, not when we noticed
+    if requested_by:
+        # Someone asked about it today: give it a full window from today so it's on the list to look at,
+        # even when its original window closed months ago.
+        due = max(due, today + dt.timedelta(days=s["window_days"]))
     status = status_for(s["rung"], s["window_days"])
     item = {
         "advisory": key, "name": short_name(key), "title": make_title(key, members),
@@ -160,7 +167,7 @@ def new_item(key, members, s, today, requested_by=None):
         "day0": day0.isoformat(), "added": today.isoformat(),
         "rung": s["rung"], "label": s["label"], "driven_by": s["driven_by"],
         "window": s["window"], "due": due.isoformat(),
-        "recheck_by": min(due, day0 + dt.timedelta(days=RECHECK_MAX_DAYS)).isoformat(),
+        "recheck_by": min(due, max(day0, today if requested_by else day0) + dt.timedelta(days=RECHECK_MAX_DAYS)).isoformat(),
         "owner": fm.PUBLISHER.get("reviewer", ""), "expires": None,
         "status": status, "tripwire": s["tripwire"],
         "smb_match": s["smb_match"], "edge": s["edge"], "remote_access": s["remote_access"],
@@ -186,7 +193,7 @@ def issue(kind, item, extra=""):
 
 
 def run(a):
-    today = d(a.today) if a.today else dt.date.today()
+    today = d(a.today) if a.today else dt.datetime.now(dt.timezone.utc).date()
     kev = load_kev(a.kev)
     nuclei = nuclei_present(a.nuclei)
     wl_path = os.path.join(a.root, "watchlist.json")
@@ -195,6 +202,7 @@ def run(a):
     wl.setdefault("items", []); wl.setdefault("closed", [])
     wl["version"] = 2
     known = {i["advisory"] for i in wl["items"] + wl["closed"]}
+    open_by_key = {i["advisory"]: i for i in wl["items"] if i["status"] in OPEN}
     issues, log, counts = [], [], defaultdict(int)
 
     # 1. Intake
@@ -207,7 +215,15 @@ def run(a):
         if not rec:
             raise SystemExit(f"--requested {a.requested}: no record in {a.cvelist}")
         f = facts(rec)
-        groups[group_key(a.requested, f)][a.requested] = f
+        key = group_key(a.requested, f)
+        groups[key][a.requested] = f
+        # Pull in the rest of its advisory: everything published the same day under the same key
+        # (the whole Patch Tuesday, the whole vendor bulletin), so a lookup isn't a one-CVE fragment.
+        if f["published"]:
+            for cid, r2 in records_in_window(a.cvelist, f["published"], f["published"]):
+                f2 = facts(r2)
+                if group_key(cid, f2) == key:
+                    groups[key][cid] = f2
     for key, members in groups.items():
         s = score(members, today, kev, nuclei)
         requested = a.requested in members if a.requested else False
@@ -220,6 +236,18 @@ def run(a):
                     "scored_on": today.isoformat(),
                     "decision": "watch" if (smb or requested) else "log: not SMB-relevant"})
         counts["scored"] += 1
+        # Late siblings: a vendor adds a CVE to a bulletin we're already watching. Fold it into the
+        # open item so step 2 rescores the whole advisory instead of never seeing the new CVE.
+        if key in open_by_key:
+            item = open_by_key[key]
+            new = sorted(set(members) - set(item["cves"]))
+            if new:
+                item["cves"] = sorted(set(item["cves"]) | set(new))
+                item["cve_count"] = len(item["cves"])
+                item["history"].append({"date": today.isoformat(), "rung": item["rung"], "status": item["status"],
+                                        "note": f"added {len(new)} CVE(s) to the advisory: {', '.join(new)}"})
+                counts["merged"] += 1
+            continue
         if key in known or not (smb or requested):
             continue
         item = new_item(key, members, s, today, a.requested_by if requested else None)
@@ -241,21 +269,37 @@ def run(a):
                 members[cid] = facts(rec)
         if members:
             s = score(members, today, kev, nuclei)
+            # Keep the exploited list current even without a rung jump: a second Patch Tuesday CVE
+            # landing on KEV leaves the rung at 4, but the brief still needs to name it.
+            newly = sorted(set(s["kev_cves"]) - set(item.get("kev_cves") or []))
+            item["kev_cves"] = s["kev_cves"]
+            if newly and s["rung"] <= item["rung"]:
+                item["history"].append({"date": today.isoformat(), "rung": item["rung"], "status": item["status"],
+                                        "note": f"now on KEV: {', '.join(newly)}"})
             if s["rung"] > item["rung"]:
                 old = item["rung"]
                 due = today + dt.timedelta(days=s["window_days"])
                 item.update(rung=s["rung"], label=s["label"], driven_by=s["driven_by"], tripwire=s["tripwire"],
                             window=s["window"], due=due.isoformat(), kev_cves=s["kev_cves"],
                             recheck_by=min(due, today + dt.timedelta(days=RECHECK_MAX_DAYS)).isoformat())
-                if item["status"] != "accepted":
+                note = f"escalated from rung {old}"
+                if item["status"] == "accepted" and s["rung"] >= REVOKE_RUNG:
+                    # An acceptance covers the risk that was signed for. Exploitation is a different risk.
+                    item["status"] = status_for(s["rung"], s["window_days"])
+                    note += f"; risk acceptance by {item.get('owner') or '-'} revoked at rung {s['rung']}"
+                    item["revoked_acceptance"] = {"owner": item.get("owner"), "expires": item.get("expires"),
+                                                  "on": today.isoformat()}
+                    item["owner"], item["expires"] = None, None
+                elif item["status"] != "accepted":
                     new = status_for(s["rung"], s["window_days"])
                     order = ["watching", "light duty", "needs action"]
                     if order.index(new) > order.index(item["status"]):
                         item["status"] = new
                 item["history"].append({"date": today.isoformat(), "rung": s["rung"], "status": item["status"],
-                                        "note": f"escalated from rung {old}"})
+                                        "note": note})
                 issues.append(issue("Rung up", item, f"Escalated from rung {old} to {s['rung']}. "
-                                                     f"New window starts today."))
+                                                     f"New window starts today."
+                                                     + (" Risk acceptance revoked." if "revoked" in note else "")))
                 counts["escalated"] += 1
         if item["status"] == "accepted" and item.get("expires") and d(item["expires"]) < today:
             item["status"] = "needs action"
@@ -278,7 +322,8 @@ def run(a):
             wl["closed"].append(item); counts["aged off"] += 1
             continue
         if item["status"] == "watching":
-            quiet_until = max(d(item["due"]), d(item["day0"]) + dt.timedelta(days=30))
+            start = d(item["added"]) if item.get("requested_by") else d(item["day0"])
+            quiet_until = max(d(item["due"]), start + dt.timedelta(days=30))
             if today > quiet_until:
                 item["status"] = "held"
                 item["closed_on"] = today.isoformat()
@@ -305,7 +350,7 @@ def run(a):
     if a.issues_out:
         with open(a.issues_out, "w") as fh:
             json.dump(issues, fh, indent=1)
-    print(f"{today}: scored {counts['scored']}, added {counts['added']}, escalated {counts['escalated']}, "
+    print(f"{today}: scored {counts['scored']}, added {counts['added']}, escalated {counts['escalated']}, merged {counts['merged']}, "
           f"held {counts['held']}, aged off {counts['aged off']}, issues {len(issues)}, open {len(wl['items'])}")
     return wl, issues
 
@@ -366,7 +411,7 @@ def binnacle(wl, today, extra=None):
     if extra:
         out += [""] + extra
     out += ["", f"## Cleared ({len(cleared)}): this week", "",
-            f"Deferral held: {held}. Light duty window passed: {passed}. Marked done: {done}.", "",
+            f"Deferral held: {held}. Window passed: {passed}. Marked done: {done}.", "",
             "The full record, with every item's history, is in [watchlist.json](watchlist.json).", ""]
     return "\n".join(out)
 
