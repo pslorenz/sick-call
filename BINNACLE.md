@@ -41,21 +41,21 @@ Deferred to the normal patch cycle and re-scored every day. Any one of them move
 
 Rechecks due in the next 7 days: 17.
 
-## Sick call commandos (5): the last 90 days (31 days of history so far)
+## Sick call commandos (5): the last 90 days (4 days of history so far)
 
 The vendors that keep turning up at sick call. Ranked by short-window bulletins (needs action or light duty), then CVEs on CISA KEV, then total CVEs. SMB-relevant advisories only, counted by disclosure date. Same rule for every vendor.
 
 | Vendor | Bulletins | CVEs | Short-window | CVEs on KEV | Median days to KEV |
 | --- | --- | --- | --- | --- | --- |
-| WatchGuard | 5 | 40 | 5 | 0 | - |
-| Zyxel | 4 | 5 | 4 | 0 | - |
-| Fortinet | 4 | 100 | 3 | 0 | - |
-| N-able | 3 | 25 | 3 | 0 | - |
-| SonicWall | 2 | 9 | 2 | 1 | 0 |
+| WatchGuard | 1 | 15 | 1 | 0 | - |
+| Ubiquiti Inc | 1 | 7 | 1 | 0 | - |
+| ConnectWise | 1 | 1 | 1 | 0 | - |
+| PHP Group | 17 | 17 | 0 | 0 | - |
+| Apple | 1 | 13 | 0 | 0 | - |
 
 
-## Cleared (15): this week
+## Cleared (16): this week
 
-Deferral held: 0. Light duty window passed: 15. Marked done: 0.
+Deferral held: 0. Light duty window passed: 16. Marked done: 0.
 
 The full record, with every item's history, is in [watchlist.json](watchlist.json).

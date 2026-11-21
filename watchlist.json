@@ -6754,6 +6754,52 @@
     }
    ],
    "closed_on": "2026-11-21"
+  },
+  {
+   "advisory": "microsoft-release-2026-07-14",
+   "name": "microsoft-release-2026-07-14",
+   "title": "Microsoft release, 2026-07-14",
+   "cves": [
+    "CVE-2026-56155"
+   ],
+   "cve_count": 1,
+   "kev_cves": [
+    "CVE-2026-56155"
+   ],
+   "day0": "2026-07-14",
+   "added": "2026-11-21",
+   "rung": 4,
+   "label": "Exploited",
+   "driven_by": "CVE-2026-56155",
+   "window": "24 hours",
+   "due": "2026-07-15",
+   "recheck_by": "2026-07-15",
+   "owner": "Steven",
+   "expires": null,
+   "status": "window passed",
+   "tripwire": "a scanning feed showing mass targeting, or KEV ransomware use",
+   "smb_match": [
+    "microsoft: windows"
+   ],
+   "edge": false,
+   "remote_access": false,
+   "max_cvss": 7.8,
+   "history": [
+    {
+     "date": "2026-11-21",
+     "rung": 4,
+     "status": "needs action",
+     "note": "requested by manual run"
+    },
+    {
+     "date": "2026-11-21",
+     "rung": 4,
+     "status": "window passed",
+     "note": "14 days past due and never marked done"
+    }
+   ],
+   "requested_by": "manual run",
+   "closed_on": "2026-11-21"
   }
  ],
  "updated": "2026-11-21"
