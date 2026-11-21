@@ -1,25 +1,48 @@
 {
   "_comment": "Copy to sick-call.local.json (git-ignored) and edit. Anything you leave out keeps the baseline.",
-
   "publisher": {
     "name": "Example MSP",
     "reviewer": "Jane Doe"
   },
-
-  "smb_products_add": ["epicor", "dentrix", "kaseya vsa"],
-  "smb_products_remove": ["quickbooks"],
-  "edge_words_add": ["barracuda"],
-
-  "windows": {
-    "2": ["next patch cycle", "30 days", "14 days"],
-    "3": ["next patch cycle", "7 days", "72 hours"]
+  "smb_products_add": [
+    "dentrix"
+  ],
+  "smb_products_remove": [
+    "quickbooks"
+  ],
+  "smb_vendors_add": {
+    "henry schein": [
+      "dentrix"
+    ],
+    "epicor": []
   },
-
+  "edge_words_add": [
+    "barracuda"
+  ],
+  "windows": {
+    "2": [
+      "next patch cycle",
+      "30 days",
+      "14 days"
+    ],
+    "3": [
+      "next patch cycle",
+      "7 days",
+      "72 hours"
+    ]
+  },
   "edge_floor": {
     "enabled": true,
-    "min_vendor_kev_12mo": 1,
+    "min_vendor_kev_12mo": 0,
     "floor_rung": 2
   },
-
-  "panic_cvss": 9.0
+  "panic_cvss": 9.0,
+  "release_groups": {
+    "cisco": "day",
+    "chrome": "day"
+  },
+  "remote_access_floor": {
+    "enabled": true,
+    "floor_rung": 3
+  }
 }

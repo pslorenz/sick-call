@@ -61,6 +61,64 @@ SMB_PRODUCTS = ["windows", "microsoft 365", "m365", "exchange", "outlook", "offi
     "zoom", "vmware esxi", "hyper-v", "citrix", "printer", "ivanti", "openssh", "7-zip", "winrar",
     "java", "openjdk", "tomcat", ".net", "node.js", "log4j", "spring"]   # runtimes inside SMB web apps
 
+# Vendor-anchored SMB baseline, used when vendor and product arrive separately (CVE records).
+# A product keyword only counts for its own vendor, so "Acme Agent for Windows" isn't Windows and
+# "Payment Gateway for WooCommerce" by some plugin author isn't WooCommerce. [] = every product
+# from that vendor counts.
+SMB_VENDOR_PRODUCTS = {
+    "microsoft": ["windows", "office", "microsoft 365", "365", "exchange", "outlook", "teams", "sharepoint",
+                  "onedrive", "intune", "entra", "edge", ".net", "hyper-v", "sql server", "remote desktop"],
+    "google": ["chrome"], "mozilla": ["firefox", "thunderbird"],
+    "apple": ["macos", "ios", "ipados", "safari"],
+    "fortinet": [], "sonicwall": [], "watchguard": [], "sophos": [], "ubiquiti": [], "ivanti": [], "zyxel": [],
+    "cisco": ["meraki", "asa", "anyconnect", "secure client", "firepower"],
+    "palo alto networks": ["pan-os", "globalprotect"],
+    "ninjaone": [], "connectwise": [], "kaseya": [], "datto": [], "n-able": [], "teamviewer": [], "anydesk": [],
+    "veeam": [], "synology": [], "qnap": [], "ahsay": [], "mikrotik": [],
+    "beyondtrust": ["remote support", "privileged remote access"], "splashtop": [], "atera": [], "simplehelp": [],
+    "wordpress": ["wordpress"], "automattic": ["wordpress", "woocommerce", "jetpack"], "woocommerce": ["woocommerce"],
+    "php group": ["php"], "php": ["php"],
+    "intuit": ["quickbooks"], "adobe": ["acrobat", "reader"], "zoom": [], "citrix": [],
+    "vmware": ["esxi"], "broadcom": ["esxi"], "openbsd": ["openssh"], "openssh": [], "7-zip": [], "rarlab": ["winrar"],
+    "oracle": ["java", "jdk", "jre"], "eclipse foundation": ["temurin"], "amazon": ["corretto"],
+    "apache software foundation": ["tomcat", "log4j"], "spring": [], "vmware tanzu": ["spring"],
+}
+
+# Vendors whose products sit on the internet edge, for the edge-device floor (same rules as above).
+EDGE_VENDOR_PRODUCTS = {
+    "fortinet": ["fortios", "fortigate", "fortiproxy", "fortiweb", "fortivoice", "fortimanager", "fortisiem", "fortiswitch"],
+    "sonicwall": [], "watchguard": [], "sophos": ["firewall", "sfos"], "zyxel": [], "ivanti": ["connect secure", "policy secure", "epmm"],
+    "palo alto networks": ["pan-os", "globalprotect"], "cisco": ["asa", "firepower", "ftd", "meraki"],
+    "citrix": ["netscaler", "gateway", "adc"], "connectwise": ["screenconnect"], "progress": ["moveit"],
+    "fortra": ["goanywhere"], "barracuda": [], "f5": ["big-ip"], "ubiquiti": ["unifi"], "mikrotik": ["routeros"],
+}
+
+# Remote access and RMM: the way into every client an MSP manages. These get their own, higher floor,
+# with no KEV-history condition: the category has earned it.
+REMOTE_ACCESS_VENDOR_PRODUCTS = {
+    "connectwise": ["screenconnect", "control", "automate"], "kaseya": ["vsa"], "ninjaone": [],
+    "n-able": ["n-central", "n-sight", "take control"], "teamviewer": [], "anydesk": [], "splashtop": [],
+    "beyondtrust": ["remote support", "privileged remote access"], "atera": [], "simplehelp": [],
+    "datto": ["rmm"], "solarwinds": ["dameware"],
+}
+REMOTE_ACCESS_WORDS = ["screenconnect", "connectwise control", "kaseya vsa", "teamviewer", "anydesk", "splashtop",
+                       "beyondtrust", "simplehelp", "n-central", "take control", "datto rmm", "ninjaone", "atera"]
+
+# Vendors that ship on a schedule. Their CVEs are grouped into one advisory per release, keyed by the
+# CVE's assigning CNA and its publish date. A Patch Tuesday with 1,000+ CVEs is one brief, led by the
+# few that are exploited, not 1,000 briefs. "day" is the default because scheduled releases publish
+# all their CVEs on one day; grouping by calendar month folded early out-of-band CVEs into the next
+# Patch Tuesday and made its day 0 too early. "month" is still available for vendors that dribble.
+RELEASE_GROUPS = {"microsoft": "day", "adobe": "day", "oracle": "day", "chrome": "day", "mozilla": "day"}
+
+def release_key(assigner, published):
+    """Advisory key for a scheduled-release CVE, or None if its CNA doesn't ship on a schedule."""
+    rule = RELEASE_GROUPS.get((assigner or "").lower())
+    if not rule or not published:
+        return None
+    stamp = published.strftime("%Y-%m") if rule == "month" else published.isoformat()
+    return f"{assigner.lower()}-release-{stamp}"
+
 # Internet-facing edge gear. Used by the edge-device floor and the backtest.
 EDGE_WORDS = ["sonicos", "sonicwall", "fortios", "fortigate", "fortiproxy", "fortiweb", "pan-os", "globalprotect",
               "asa", "firepower", "ivanti connect", "pulse", "citrix", "netscaler", "sma", "watchguard", "fireware",
@@ -70,7 +128,11 @@ EDGE_WORDS = ["sonicos", "sonicwall", "fortios", "fortigate", "fortiproxy", "for
 WINDOW_DAYS = {"now, hours not days": 0, "confirm inventory today": 0, "24 hours": 1, "72 hours": 3,
                "7 days": 7, "14 days": 14, "30 days": 30, "next patch cycle": 30, "normal cycle": 30}
 
-EDGE_FLOOR = {"enabled": True, "min_vendor_kev_12mo": 1, "floor_rung": 2}
+# Edge floor: internet-facing edge gear gets at least the rung-2 window (7 days). It used to require a
+# KEV entry for the vendor in the last 12 months; the first backtest showed MikroTik slipping through
+# that condition and landing on KEV in 5 days, so the default is now 0. MSPs can raise it in config.
+EDGE_FLOOR = {"enabled": True, "min_vendor_kev_12mo": 0, "floor_rung": 2}
+REMOTE_ACCESS_FLOOR = {"enabled": True, "floor_rung": 3}   # internet-facing remote access: at least 72 hours
 PANIC_CVSS = 9.0          # what a peer group treats as drop-everything without reading further
 PUBLISHER = {"name": "sick-call", "reviewer": "Steven"}
 
@@ -89,6 +151,17 @@ def _load_config():
     drop = {x.lower() for x in c.get("smb_products_remove", [])}
     SMB_PRODUCTS = [x for x in SMB_PRODUCTS if x not in drop] + [x.lower() for x in c.get("smb_products_add", [])]
     EDGE_WORDS = EDGE_WORDS + [x.lower() for x in c.get("edge_words_add", [])]
+    for vendor, prods in c.get("smb_vendors_add", {}).items():
+        SMB_VENDOR_PRODUCTS[vendor.lower()] = [x.lower() for x in prods]
+    for vendor in drop:
+        SMB_VENDOR_PRODUCTS.pop(vendor, None)
+    for cna, rule in c.get("release_groups", {}).items():
+        if rule not in ("month", "day", "none"):
+            raise SystemExit(f"{path}: release_groups[{cna}] must be month, day, or none")
+        if rule == "none":
+            RELEASE_GROUPS.pop(cna.lower(), None)
+        else:
+            RELEASE_GROUPS[cna.lower()] = rule
     for rung, vals in c.get("windows", {}).items():
         vals = tuple(vals)
         bad = [v for v in vals if v not in WINDOW_DAYS]
@@ -96,11 +169,60 @@ def _load_config():
             raise SystemExit(f"{path}: windows[{rung}] needs 3 values (none, internal, internet) from {sorted(WINDOW_DAYS)}")
         WINDOWS[int(rung)] = vals
     EDGE_FLOOR.update(c.get("edge_floor", {}))
+    REMOTE_ACCESS_FLOOR.update(c.get("remote_access_floor", {}))
     PANIC_CVSS = float(c.get("panic_cvss", PANIC_CVSS))
     PUBLISHER = {**PUBLISHER, **c.get("publisher", {})}
     return path
 
+_BASELINE_LEN = len(SMB_PRODUCTS)
 CONFIG_PATH = _load_config()
+
+def _word_match(words, text):
+    """Whole-word match: 'edge' must not hit 'knowledge', 'sage' must not hit 'message'."""
+    import re as _re
+    text = text.lower()
+    return [w for w in words if _re.search(r"(?<![a-z0-9])" + _re.escape(w) + r"(?![a-z0-9])", text)]
+
+def smb_match(text):
+    return _word_match(SMB_PRODUCTS, text)
+
+def edge_match(text):
+    return _word_match(EDGE_WORDS, text)
+
+def edge_match_words(words, text):
+    return _word_match(words, text)
+
+def _pair_match(table, vendor, product):
+    """Match a (vendor, product) pair against a vendor-anchored table. Returns a label or None."""
+    vendor, product = (vendor or "").lower(), (product or "").lower()
+    for v in _word_match(list(table), vendor):
+        keys = table[v]
+        if not keys:
+            return v
+        hit = _word_match(keys, product)
+        if hit:
+            return f"{v}: {hit[0]}"
+    return None
+
+def smb_pair(vendor, product):
+    """SMB match for structured data. Analyst additions in smb_products_add count for any vendor."""
+    return _pair_match(SMB_VENDOR_PRODUCTS, vendor, product) or \
+        next((f"added: {w}" for w in _word_match(SMB_PRODUCTS[_BASELINE_LEN:], product)), None)
+
+def edge_pair(vendor, product):
+    return _pair_match(EDGE_VENDOR_PRODUCTS, vendor, product)
+
+def remote_access_pair(vendor, product):
+    return _pair_match(REMOTE_ACCESS_VENDOR_PRODUCTS, vendor, product)
+
+def floor_rung(rung, edge=False, vendor_kev=0, remote_access=False):
+    """The rung whose window applies, after the edge and remote-access floors. Never changes the rung itself."""
+    r = rung
+    if edge and EDGE_FLOOR["enabled"] and (vendor_kev or 0) >= EDGE_FLOOR["min_vendor_kev_12mo"]:
+        r = max(r, int(EDGE_FLOOR["floor_rung"]))
+    if remote_access and REMOTE_ACCESS_FLOOR["enabled"]:
+        r = max(r, int(REMOTE_ACCESS_FLOOR["floor_rung"]))
+    return r
 
 def smb_relevance(sig):
     """yes | indirect | no. 'indirect' = reaches SMBs through a host, MSP, or vendor appliance."""
@@ -108,7 +230,7 @@ def smb_relevance(sig):
         return "yes", "found in your fleet"
     if sig.get("smb_relevance") in ("yes", "indirect", "no"):
         return sig["smb_relevance"], sig.get("smb_note", "set by analyst")
-    hits = [p for p in sig.get("products", []) if any(k in p.lower() for k in SMB_PRODUCTS)]
+    hits = [p for p in sig.get("products", []) if smb_match(p)]
     if hits:
         return "yes", "SMB stack: " + ", ".join(hits)
     return "no", "no product in the SMB list (set smb_relevance to override)"
@@ -284,7 +406,8 @@ def main():
                          if v.get("vendorProject", "").lower() == sig["vendor"].lower() and v.get("dateAdded", "") >= cutoff)
     edge_floor = bool(EDGE_FLOOR["enabled"] and sig.get("edge_device")
                       and (vendor_kev or 0) >= EDGE_FLOOR["min_vendor_kev_12mo"])
-    window_rung = max(rung, int(EDGE_FLOOR["floor_rung"])) if (edge_floor and exposure == "internet") else rung
+    remote = bool(sig.get("remote_access") or any(edge_match_words(REMOTE_ACCESS_WORDS, p) for p in sig.get("products", [])))
+    window_rung = floor_rung(rung, sig.get("edge_device"), vendor_kev, remote) if exposure == "internet" else rung
     window = WINDOWS[window_rung][["none", "internal", "internet"].index(exposure)] if exposure else None
     _, label, line = LADDER[rung]
     if rung == 0 and any(i.get("evidence", {}).get("vendor_confirmed", True) and not i.get("evidence", {}).get("theoretical")
@@ -304,7 +427,7 @@ def main():
     if a.json:
         print(json.dumps({"name": name, "rung": rung, "label": label, "line": line, "driven_by": top["cve"],
                           "per_cve": results, "conflicts": conflicts, "headline_noise": level, "noise_note": gap,
-                          "exposure": exposure, "action_window": window, "edge_floor": edge_floor, "vendor_kev_12mo": vendor_kev,
+                          "exposure": exposure, "action_window": window, "edge_floor": edge_floor, "remote_access": remote, "vendor_kev_12mo": vendor_kev,
                           "smb_relevance": relevance, "smb_note": rel_note, "publish": brief, "review": review,
                           "publisher": PUBLISHER, "config": CONFIG_PATH, "log_record": log_record}, indent=2))
         return
@@ -325,6 +448,8 @@ def main():
     print(f"  Headline noise: {level}. {gap}")
     if edge_floor:
         print(f"  Edge device, vendor has {vendor_kev} KEV entries in 12 months: internet-facing window floor is rung {EDGE_FLOOR['floor_rung']}.")
+    if remote and REMOTE_ACCESS_FLOOR["enabled"]:
+        print(f"  Remote access tool: internet-facing window floor is rung {REMOTE_ACCESS_FLOOR['floor_rung']}.")
     if window: print(f"  Your exposure: {exposure}. Action window: {window}")
     else: print("  Your exposure: not matched yet. Run the inventory match for an action window.")
     print(f"  SMB relevance: {relevance} ({rel_note})")

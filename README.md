@@ -2,20 +2,23 @@
 
 **Daily vulnerability triage for SMB defenders. What needs you today, and what can wait.**
 
-Every named bug shows up at sick call claiming to be dying. Most go back to duty with Motrin and water. A few need the medevac. sick-call is how we tell them apart, in writing, before the peer group chat catches fire.
+> Fix what is reachable, exploited, and holding the keys first. Everything else goes on a schedule you can defend in writing.
+
+Every named bug shows up at sick call claiming to be dying. Most go back to duty with Motrin and water. A few need extra care. sick-call is how we tell the vulnerabilities apart, in writing, before the group chat catches fire.
 
 Patching everything, every time, the moment it's announced is no longer a plan. sick-call puts each advisory on a six-rung ladder built only from evidence, says plainly what we're doing about it, and watches the ones we defer so "not today" never turns into "forgot."
 
-> **Status: v0.1 alpha.** The ladder works and the backtest is published, misses included. Briefs are drafted by hand with the skill and reviewed before they go out. Expect the ladder and file formats to change before 1.0; the [changelog](CHANGELOG.md) will say when.
+> **Status: v0.1 alpha.** The ladder works and the backtest is published, misses included. Briefs are drafted by hand with the skill and reviewed before they go out. Expect the ladder and file formats to change before 1.0; the [changelog](CHANGELOG.md) should map.
 
 ## The ladder
+
+**sick-call triages; it isn't incident response.** The ladder weighs evidence of exploitation *elsewhere*. If you have credible signs of compromise in your own environment, stop reading briefs and activate your incident response plan.
 
 A vulnerability sits on the highest rung whose evidence is met. No weighted scores: every rung traces to one source you can check.
 
 | Rung | Label | What we tell you | Evidence |
 | --- | --- | --- | --- |
-| 0 | No public details yet | Vendor-confirmed, details withheld. Nobody has shown it working in public. | Vendor advisory and fix, nothing public |
-| 0 | Theoretical | This never had a PoC because it's too theoretical. | Researchers or vendor call it impractical |
+| 0 | No public details yet, *or* Theoretical | Vendor-confirmed, details withheld. Nobody has shown it working in public. *Or, when someone says it's impractical:* this never had a PoC because it's too theoretical. | Nothing public. "Theoretical" only when researchers or the vendor call it impractical |
 | 1 | Proof of concept | Someone made it crash or corrupt memory. Nobody has shown it doing harm. | Public crash PoC, or CISA SSVC exploitation: poc |
 | 2 | Demonstrated | Researchers showed real impact on real products. Exploits not public. | Credible demo on named products |
 | 3 | Weaponized | Working exploit code is public. Assume scanning starts this week. | Metasploit, ExploitDB, Nuclei, verified PoC |
@@ -25,7 +28,8 @@ A vulnerability sits on the highest rung whose evidence is met. No weighted scor
 Two rules sit beside the ladder:
 
 - **Headline noise never moves the rung.** Loud coverage on a low rung gets called out. Quiet coverage on a high rung gets called out too.
-- **Edge-device floor.** Internet-facing firewalls, VPNs, and remote-access gear from a vendor on CISA KEV in the last 12 months get at least the rung-2 window, whatever the rung.
+- **Edge-device floor.** Internet-facing firewalls, VPNs, and routers get at least the rung-2 window (7 days), whatever the rung. An earlier version only applied this to vendors with recent CISA KEV entries; the backtest showed MikroTik slipping past that condition and landing on KEV 5 days after disclosure.
+- **Remote-access floor.** Internet-facing remote access and RMM tools (ScreenConnect, Kaseya VSA, TeamViewer, AnyDesk and the like) always get at least the rung-3 window (72 hours). They are the way into every client an MSP manages, and the backtest found ScreenConnect going from disclosure to KEV in 3 days.
 
 ## Action windows (internet-facing / internal)
 
@@ -57,7 +61,7 @@ Everything gets scored; the SMB filter only decides what gets a brief. Dropped a
 python3 tools/fud_meter.py briefs/2026/<advisory>/signals.json --requested "Your Name"
 ```
 
-Briefs are keyed by **advisory**, not CVE. The exploited bug is often the quiet sibling of the one in the headlines.
+Briefs are keyed by **advisory**, not CVE. The exploited bug is often the quiet sibling of the one in the headlines. Vendors that ship on a schedule (Microsoft, Adobe, Oracle, Chrome, Mozilla) get one advisory per release: a Patch Tuesday is one brief, led by the few CVEs that are actually being exploited.
 
 ## The Binnacle List
 
@@ -68,7 +72,7 @@ Everything that comes through sick call lands on the **Binnacle List**: each adv
 
 ### Why the name
 
-As a corpsman with a Marine battalion, I oversaw sick call every morning and then updated the binnacle list for battalion and company leadership, outlining who was down, for how long, and if they were confined to quarters or light duty. Leadership didn't need clinical detail, they needed to know who was out and how it impacted the plan of the day.
+As a corpsman that spent some time with a Marine battalion, I oversaw sick call every morning and then updated the binnacle list for battalion and company leadership, outlining who was down, for how long, and if they were confined to quarters or light duty. Leadership didn't need clinical detail, they needed to know who was out and how it impacted the plan of the day.
 
 That is the intended purpose here, sick call is the triage and the Binnacle List is what goes to leadership and program runners afterward. The name comes from the ship's binnacle, the stand that holds the compass, where the list was posted for the officer of the deck. The Binnacle List represents a navigational aid with regard to vulnerability prioritization.
 
@@ -86,6 +90,17 @@ watchlist.json               deferred advisories and their tripwires (published 
 sick-call.example.json       template for your git-ignored sick-call.local.json
 .claude/skills/vuln-brief/   the drafting workflow
 ```
+
+## Results
+
+The v0.1 backtest scored 90 days of disclosures (2026-08-23 to 2026-11-21) as if sick-call had been running on day 0 of each one.
+
+- **1,434** SMB-relevant advisories. **28** were exploited before their window closed. The ladder called **23** of those urgent on the day they dropped.
+- The other **5** were all internet-facing systems the business runs itself, and all hit CISA KEV within **3 to 10 days**. None escalated after its window closed.
+- **112** SMB-relevant bugs scored CVSS 9.0+ were deferred, stayed quiet for 30+ days, and were never exploited.
+- EPSS gave no early warning on the misses. The watch list did the work.
+
+The full scorecard, the five misses, the workload it puts on an MSP, and the limits are in [backtest/RESULTS-v0.1.md](backtest/RESULTS-v0.1.md).
 
 ## Run the backtest
 
@@ -107,7 +122,7 @@ python3 -m unittest discover -s tests -t .
 
 ## Using sick-call at your MSP
 
-There are three ways in, and most people only need the first.
+There are three ways:
 
 1. **Read the briefs.** Follow the repo or the feed. No install, no data shared.
 2. **Run it yourself.** Clone the repo and run the meter, collectors, and inventory match on infrastructure you maintain: a VM, your RMM, or a self-hosted runner. Client data stays in your environment and never comes back here.
@@ -115,7 +130,7 @@ There are three ways in, and most people only need the first.
 
 ### Local configuration
 
-The built-in product list is a wide SMB baseline, so it works out of the box. Tune it to your client base without editing code:
+The built-in baseline is wide, and it's anchored to vendors: a product only counts if it comes from the vendor that makes it, so "Acme Agent for Windows" isn't Windows and a WooCommerce add-on isn't WooCommerce. Works out of the box, tune it to your client base without editing code:
 
 ```
 cp sick-call.example.json sick-call.local.json
@@ -126,24 +141,27 @@ cp sick-call.example.json sick-call.local.json
 | Setting | What it does |
 | --- | --- |
 | `publisher` | Your MSP's name and reviewer, used on briefs you publish |
-| `smb_products_add`, `smb_products_remove` | Adjust which products count as SMB-relevant for your clients |
+| `smb_vendors_add` | Add vendors your clients run, with the products that count (`[]` means all of that vendor's products) |
+| `smb_products_add`, `smb_products_remove` | Add product keywords that count for any vendor, or drop baseline entries (vendors or keywords) |
 | `edge_words_add` | Add edge gear you support that the baseline misses |
 | `windows` | Your SLAs per rung: three values (no exposure, internal, internet-facing) from the supported list |
+| `release_groups` | Group a scheduled vendor's CVEs into one advisory per release, by CNA: `month`, `day`, or `none` to switch it off |
+| `remote_access_floor` | Turn the remote-access floor on or off, or change its floor rung |
 | `edge_floor` | Turn the edge-device floor on or off, or change its threshold and floor rung |
 | `panic_cvss` | The CVSS score your peers treat as drop-everything, for the backtest's "panic avoided" count |
 
-Config changes your windows, relevance, and labels. It never changes a rung, because rungs come only from evidence. To check against the baseline, run with `SICK_CALL_CONFIG=none`, which is what the tests do.
+Config changes your windows, relevance, and labels. It never changes a rung, because rungs come only from evidence. To check against the baseline, run with `SICK_CALL_CONFIG=none`.
 
 ### The "What we're doing" line belongs to the publisher
 
-Every brief carries a "What we're doing" line, and in this repo it's sick-call's position. If you republish a brief to your own clients, replace that line with your own decision. CC BY 4.0 requires attribution to sick-call. It doesn't make our position yours, and your clients deserve to know whose call it is.
+Every brief carries a "What we're doing" line, and in this repo it's sick-call's position (and not an actual MSP, we're as in the maintainer). If you republish a brief to your own clients, replace or augment that line with your own decision(s). CC BY 4.0 requires attribution to sick-call. It doesn't make the maintainer's position yours, and your clients deserve to know whose call it is.
 
 ## Roadmap
 
 | Version | What ships | Done when |
 | --- | --- | --- |
 | **0.1 alpha** | Ladder, backtest results, three regression cases, hand-drafted briefs | Backtest scorecard published with its misses |
-| 0.2 | Daily intake and watch list in GitHub Actions, no LLM; the live Binnacle List | Two quiet weeks of intake output that look right |
+| 0.2 | Daily intake and watch list in GitHub Actions, no LLM; the live Binnacle List; `recheck_by`, `owner`, and `expires` on deferrals, workarounds, and conditional clears | Two quiet weeks of intake output that look right |
 | 0.3 | Drafting via pull requests; review gate and held labels in CI | First automated brief merged after review |
 | 0.4 | RSS feed, webhooks, weekly Binnacle List digest | Peers get briefs without visiting the repo |
 | 1.0 | Stable ladder and formats | 90 days of live briefs, scored the same way as the backtest |
