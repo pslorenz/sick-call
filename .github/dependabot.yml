@@ -1,0 +1,8 @@
+# Proposes action updates as PRs, keeping SHA pins and their version comments. Review before merging:
+# anything merged here runs with write access to this repo and its issues.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

@@ -384,5 +384,11 @@ class Daily(unittest.TestCase):
             self.assertEqual(nov["due"], "2026-11-22")                 # a window from today, not from Nov 10
             self.assertEqual(nov["cve_count"], 3)                      # the whole release came with it
 
+class Hardening(unittest.TestCase):
+    def test_actions_pinned_to_sha(self):
+        """Tags can be moved by whoever controls an action; a commit SHA can't. The daily run can push."""
+        r = subprocess.run([sys.executable, "tools/pin_actions.py", "--check"], cwd=ROOT, capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, "Unpinned actions; run `python tools/pin_actions.py`:\n" + r.stdout)
+
 if __name__ == "__main__":
     unittest.main()

@@ -23,7 +23,7 @@ The daily pipeline. The ladder is unchanged from 0.1.0.
 - Sick call commandos credit every vendor a bulletin names, not the first one alphabetically.
 - `--today` defaults to the UTC date, matching GitHub Actions.
 - Manual workflow runs take a `lookback` input (default 3), so the log can be re-seeded from GitHub.
-- Workflows use actions/checkout@v5 and actions/setup-python@v6 (Node 24).
+- Workflows use actions/checkout@v5 and actions/setup-python@v6 (Node 24), pinned to commit SHAs. `tools/pin_actions.py` pins and checks them, a test fails if anything is unpinned, and Dependabot proposes updates as PRs.
 
 ### Fixed
 - `smb_products_add` was ignored when the same config also removed a baseline product.
