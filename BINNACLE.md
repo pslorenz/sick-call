@@ -1,16 +1,15 @@
 # The Binnacle List
 
-Updated 2026-11-21. What came through sick call, and what it means for the plan of the day.
+Updated 2026-11-22. What came through sick call, and what it means for the plan of the day.
 
 sick-call triages; it isn't incident response. Credible signs of compromise in your own environment go to your IR plan, not this list.
 
-## Confined to quarters (3): needs action
+## Confined to quarters (2): needs action
 
 Being exploited, or working exploit code is public. Act inside the window.
 
 | What | Rung | Window | Due | Exploited |
 | --- | --- | --- | --- | --- |
-| [SonicWall (SonicOS): 7 CVEs](https://psirt.global.sonicwall.com/vuln-detail/SNWLID-2026-0014) | 4 Exploited | 24 hours | 2026-11-07 (overdue) | CVE-2026-19868 |
 | Microsoft release, 2026-11-10: 1094 CVEs | 4 Exploited | 24 hours | 2026-11-11 (overdue) | CVE-2026-124194 |
 | Google release, 2026-11-10: 8 CVEs | 4 Exploited | 24 hours | 2026-11-11 (overdue) | CVE-2026-125350 |
 
@@ -35,13 +34,13 @@ Nothing public yet, but internet-facing edge or remote-access gear gets a short 
 
 None.
 
-## On the list (66): watching
+## On the list (64): watching
 
 Deferred to the normal patch cycle and re-scored every day. Any one of them moves up the day a public PoC, working exploit code, or a KEV listing appears.
 
 Rechecks due in the next 7 days: 17.
 
-## Sick call commandos (5): the last 90 days (31 days of history so far)
+## Sick call commandos (5): the last 90 days (32 days of history so far)
 
 The vendors that keep turning up at sick call. Ranked by short-window bulletins (confined to quarters or light duty), then CVEs on CISA KEV, then total CVEs. SMB-relevant advisories only, counted by disclosure date. A bulletin that names several vendors counts once for each of them. Same rule for every vendor.
 
@@ -54,8 +53,8 @@ The vendors that keep turning up at sick call. Ranked by short-window bulletins 
 | SonicWall | 2 | 9 | 2 | 1 | 0 |
 
 
-## Cleared (16): this week
+## Cleared (19): this week
 
-Deferral held: 0. Window passed: 16. Marked done: 0.
+Deferral held: 2. Window passed: 17. Marked done: 0.
 
 The full record, with every item's history, is in [watchlist.json](watchlist.json).

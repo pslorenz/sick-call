@@ -1756,50 +1756,6 @@
    ]
   },
   {
-   "advisory": "https://psirt.global.sonicwall.com/vuln-detail/SNWLID-2026-0014",
-   "name": "SNWLID-2026-0014",
-   "title": "SonicWall (SonicOS)",
-   "cves": [
-    "CVE-2026-107154",
-    "CVE-2026-107155",
-    "CVE-2026-19703",
-    "CVE-2026-19868",
-    "CVE-2026-77708",
-    "CVE-2026-77709",
-    "CVE-2026-82308"
-   ],
-   "cve_count": 7,
-   "kev_cves": [
-    "CVE-2026-19868"
-   ],
-   "day0": "2026-11-06",
-   "added": "2026-11-21",
-   "rung": 4,
-   "label": "Exploited",
-   "driven_by": "CVE-2026-19868",
-   "window": "24 hours",
-   "due": "2026-11-07",
-   "recheck_by": "2026-11-07",
-   "owner": "Steven",
-   "expires": null,
-   "status": "needs action",
-   "tripwire": "a scanning feed showing mass targeting, or KEV ransomware use",
-   "smb_match": [
-    "sonicwall"
-   ],
-   "edge": true,
-   "remote_access": false,
-   "max_cvss": 8.8,
-   "history": [
-    {
-     "date": "2026-11-21",
-     "rung": 4,
-     "status": "needs action",
-     "note": "intake"
-    }
-   ]
-  },
-  {
    "advisory": "microsoft-release-2026-10-27",
    "name": "microsoft-release-2026-10-27",
    "title": "Microsoft release, 2026-10-27",
@@ -2665,48 +2621,6 @@
    "edge": false,
    "remote_access": false,
    "max_cvss": 8.8,
-   "history": [
-    {
-     "date": "2026-11-21",
-     "rung": 0,
-     "status": "watching",
-     "note": "intake"
-    }
-   ]
-  },
-  {
-   "advisory": "microsoft-release-2026-10-22",
-   "name": "microsoft-release-2026-10-22",
-   "title": "Microsoft release, 2026-10-22",
-   "cves": [
-    "CVE-2026-105014",
-    "CVE-2026-108456",
-    "CVE-2026-110063",
-    "CVE-2026-83938",
-    "CVE-2026-96185",
-    "CVE-2026-97785"
-   ],
-   "cve_count": 6,
-   "kev_cves": [],
-   "day0": "2026-10-22",
-   "added": "2026-11-21",
-   "rung": 0,
-   "label": "Theoretical",
-   "driven_by": "CVE-2026-108456",
-   "window": "normal cycle",
-   "due": "2026-11-21",
-   "recheck_by": "2026-11-21",
-   "owner": "Steven",
-   "expires": null,
-   "status": "watching",
-   "tripwire": "a public PoC",
-   "smb_match": [
-    "microsoft: entra",
-    "microsoft: exchange"
-   ],
-   "edge": false,
-   "remote_access": false,
-   "max_cvss": 10,
    "history": [
     {
      "date": "2026-11-21",
@@ -5212,42 +5126,6 @@
    ]
   },
   {
-   "advisory": "wordpress-2026-10-22",
-   "name": "wordpress-2026-10-22",
-   "title": "WordPress Foundation (WordPress)",
-   "cves": [
-    "CVE-2026-114570"
-   ],
-   "cve_count": 1,
-   "kev_cves": [],
-   "day0": "2026-10-22",
-   "added": "2026-11-21",
-   "rung": 0,
-   "label": "Theoretical",
-   "driven_by": "CVE-2026-114570",
-   "window": "normal cycle",
-   "due": "2026-11-21",
-   "recheck_by": "2026-11-21",
-   "owner": "Steven",
-   "expires": null,
-   "status": "watching",
-   "tripwire": "a public PoC",
-   "smb_match": [
-    "wordpress: wordpress"
-   ],
-   "edge": false,
-   "remote_access": false,
-   "max_cvss": 4.9,
-   "history": [
-    {
-     "date": "2026-11-21",
-     "rung": 0,
-     "status": "watching",
-     "note": "intake"
-    }
-   ]
-  },
-  {
    "advisory": "oracle-release-2026-10-24",
    "name": "oracle-release-2026-10-24",
    "title": "Oracle Corporation release, 2026-10-24",
@@ -6800,7 +6678,150 @@
    ],
    "requested_by": "manual run",
    "closed_on": "2026-11-21"
+  },
+  {
+   "advisory": "https://psirt.global.sonicwall.com/vuln-detail/SNWLID-2026-0014",
+   "name": "SNWLID-2026-0014",
+   "title": "SonicWall (SonicOS)",
+   "cves": [
+    "CVE-2026-107154",
+    "CVE-2026-107155",
+    "CVE-2026-19703",
+    "CVE-2026-19868",
+    "CVE-2026-77708",
+    "CVE-2026-77709",
+    "CVE-2026-82308"
+   ],
+   "cve_count": 7,
+   "kev_cves": [
+    "CVE-2026-19868"
+   ],
+   "day0": "2026-11-06",
+   "added": "2026-11-21",
+   "rung": 4,
+   "label": "Exploited",
+   "driven_by": "CVE-2026-19868",
+   "window": "24 hours",
+   "due": "2026-11-07",
+   "recheck_by": "2026-11-07",
+   "owner": "Steven",
+   "expires": null,
+   "status": "window passed",
+   "tripwire": "a scanning feed showing mass targeting, or KEV ransomware use",
+   "smb_match": [
+    "sonicwall"
+   ],
+   "edge": true,
+   "remote_access": false,
+   "max_cvss": 8.8,
+   "history": [
+    {
+     "date": "2026-11-21",
+     "rung": 4,
+     "status": "needs action",
+     "note": "intake"
+    },
+    {
+     "date": "2026-11-22",
+     "rung": 4,
+     "status": "window passed",
+     "note": "14 days past due and never marked done"
+    }
+   ],
+   "closed_on": "2026-11-22"
+  },
+  {
+   "advisory": "microsoft-release-2026-10-22",
+   "name": "microsoft-release-2026-10-22",
+   "title": "Microsoft release, 2026-10-22",
+   "cves": [
+    "CVE-2026-105014",
+    "CVE-2026-108456",
+    "CVE-2026-110063",
+    "CVE-2026-83938",
+    "CVE-2026-96185",
+    "CVE-2026-97785"
+   ],
+   "cve_count": 6,
+   "kev_cves": [],
+   "day0": "2026-10-22",
+   "added": "2026-11-21",
+   "rung": 0,
+   "label": "Theoretical",
+   "driven_by": "CVE-2026-108456",
+   "window": "normal cycle",
+   "due": "2026-11-21",
+   "recheck_by": "2026-11-21",
+   "owner": "Steven",
+   "expires": null,
+   "status": "held",
+   "tripwire": "a public PoC",
+   "smb_match": [
+    "microsoft: entra",
+    "microsoft: exchange"
+   ],
+   "edge": false,
+   "remote_access": false,
+   "max_cvss": 10,
+   "history": [
+    {
+     "date": "2026-11-21",
+     "rung": 0,
+     "status": "watching",
+     "note": "intake"
+    },
+    {
+     "date": "2026-11-22",
+     "rung": 0,
+     "status": "held",
+     "note": "quiet past its window; deferral held"
+    }
+   ],
+   "closed_on": "2026-11-22"
+  },
+  {
+   "advisory": "wordpress-2026-10-22",
+   "name": "wordpress-2026-10-22",
+   "title": "WordPress Foundation (WordPress)",
+   "cves": [
+    "CVE-2026-114570"
+   ],
+   "cve_count": 1,
+   "kev_cves": [],
+   "day0": "2026-10-22",
+   "added": "2026-11-21",
+   "rung": 0,
+   "label": "Theoretical",
+   "driven_by": "CVE-2026-114570",
+   "window": "normal cycle",
+   "due": "2026-11-21",
+   "recheck_by": "2026-11-21",
+   "owner": "Steven",
+   "expires": null,
+   "status": "held",
+   "tripwire": "a public PoC",
+   "smb_match": [
+    "wordpress: wordpress"
+   ],
+   "edge": false,
+   "remote_access": false,
+   "max_cvss": 4.9,
+   "history": [
+    {
+     "date": "2026-11-21",
+     "rung": 0,
+     "status": "watching",
+     "note": "intake"
+    },
+    {
+     "date": "2026-11-22",
+     "rung": 0,
+     "status": "held",
+     "note": "quiet past its window; deferral held"
+    }
+   ],
+   "closed_on": "2026-11-22"
   }
  ],
- "updated": "2026-11-21"
+ "updated": "2026-11-22"
 }
