@@ -5942,6 +5942,171 @@
      "note": "intake"
     }
    ]
+  },
+  {
+   "advisory": "microsoft-release-2026-11-23",
+   "name": "microsoft-release-2026-11-23",
+   "title": "Microsoft release, 2026-11-23",
+   "cves": [
+    "CVE-2026-109480",
+    "CVE-2026-109490",
+    "CVE-2026-113824",
+    "CVE-2026-118285",
+    "CVE-2026-118286",
+    "CVE-2026-120777",
+    "CVE-2026-120787",
+    "CVE-2026-50691",
+    "CVE-2026-62841",
+    "CVE-2026-65817",
+    "CVE-2026-69437",
+    "CVE-2026-69899",
+    "CVE-2026-70193",
+    "CVE-2026-70305",
+    "CVE-2026-81962"
+   ],
+   "cve_count": 15,
+   "kev_cves": [],
+   "day0": "2026-11-23",
+   "added": "2026-11-23",
+   "rung": 0,
+   "label": "Theoretical",
+   "driven_by": "CVE-2026-50691",
+   "window": "normal cycle",
+   "due": "2026-12-23",
+   "recheck_by": "2026-12-23",
+   "owner": "Steven",
+   "expires": null,
+   "status": "watching",
+   "tripwire": "a public PoC",
+   "smb_match": [
+    "microsoft: entra",
+    "microsoft: microsoft 365",
+    "microsoft: office",
+    "microsoft: sharepoint"
+   ],
+   "edge": false,
+   "remote_access": false,
+   "max_cvss": 10,
+   "history": [
+    {
+     "date": "2026-11-23",
+     "rung": 0,
+     "status": "watching",
+     "note": "intake"
+    }
+   ]
+  },
+  {
+   "advisory": "n-able-2026-11-22",
+   "name": "n-able-2026-11-22",
+   "title": "N-able (MailAssure)",
+   "cves": [
+    "CVE-2026-134624"
+   ],
+   "cve_count": 1,
+   "kev_cves": [
+    "CVE-2026-134624"
+   ],
+   "day0": "2026-11-22",
+   "added": "2026-11-23",
+   "rung": 4,
+   "label": "Exploited",
+   "driven_by": "CVE-2026-134624",
+   "window": "24 hours",
+   "due": "2026-11-23",
+   "recheck_by": "2026-11-23",
+   "owner": "Steven",
+   "expires": null,
+   "status": "needs action",
+   "tripwire": "a scanning feed showing mass targeting, or KEV ransomware use",
+   "smb_match": [
+    "n-able"
+   ],
+   "edge": false,
+   "remote_access": false,
+   "max_cvss": 9.3,
+   "history": [
+    {
+     "date": "2026-11-23",
+     "rung": 4,
+     "status": "needs action",
+     "note": "intake"
+    }
+   ]
+  },
+  {
+   "advisory": "spring-2026-11-23",
+   "name": "spring-2026-11-23",
+   "title": "Spring (AI, Data Elasticsearch)",
+   "cves": [
+    "CVE-2026-123886",
+    "CVE-2026-59340",
+    "CVE-2026-59442"
+   ],
+   "cve_count": 3,
+   "kev_cves": [],
+   "day0": "2026-11-23",
+   "added": "2026-11-23",
+   "rung": 0,
+   "label": "Theoretical",
+   "driven_by": "CVE-2026-123886",
+   "window": "normal cycle",
+   "due": "2026-12-23",
+   "recheck_by": "2026-12-23",
+   "owner": "Steven",
+   "expires": null,
+   "status": "watching",
+   "tripwire": "a public PoC",
+   "smb_match": [
+    "spring"
+   ],
+   "edge": false,
+   "remote_access": false,
+   "max_cvss": 8.8,
+   "history": [
+    {
+     "date": "2026-11-23",
+     "rung": 0,
+     "status": "watching",
+     "note": "intake"
+    }
+   ]
+  },
+  {
+   "advisory": "synology-2026-11-23",
+   "name": "synology-2026-11-23",
+   "title": "Synology (DiskStation Manager (DSM))",
+   "cves": [
+    "CVE-2026-120382"
+   ],
+   "cve_count": 1,
+   "kev_cves": [],
+   "day0": "2026-11-23",
+   "added": "2026-11-23",
+   "rung": 0,
+   "label": "Theoretical",
+   "driven_by": "CVE-2026-120382",
+   "window": "normal cycle",
+   "due": "2026-12-23",
+   "recheck_by": "2026-12-23",
+   "owner": "Steven",
+   "expires": null,
+   "status": "watching",
+   "tripwire": "a public PoC",
+   "smb_match": [
+    "synology"
+   ],
+   "edge": false,
+   "remote_access": false,
+   "max_cvss": 9.8,
+   "history": [
+    {
+     "date": "2026-11-23",
+     "rung": 0,
+     "status": "watching",
+     "note": "intake"
+    }
+   ]
   }
  ],
  "closed": [
@@ -20809,5 +20974,5 @@
    "closed_on": "2026-11-22"
   }
  ],
- "updated": "2026-11-22"
+ "updated": "2026-11-23"
 }
