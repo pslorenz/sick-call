@@ -1,6 +1,6 @@
 # The Binnacle List
 
-Updated 2026-11-23. What came through sick call, and what it means for the plan of the day.
+Updated 2026-11-24. What came through sick call, and what it means for the plan of the day.
 
 sick-call triages; it isn't incident response. Credible signs of compromise in your own environment go to your IR plan, not this list.
 
@@ -12,7 +12,7 @@ Being exploited, or working exploit code is public. Act inside the window.
 | --- | --- | --- | --- | --- |
 | Microsoft release, 2026-11-10: 1094 CVEs | 4 Exploited | 24 hours | 2026-11-11 (overdue) | CVE-2026-124194 |
 | Google release, 2026-11-10: 8 CVEs | 4 Exploited | 24 hours | 2026-11-11 (overdue) | CVE-2026-125350 |
-| N-able (MailAssure): 1 CVE | 4 Exploited | 24 hours | 2026-11-23 | CVE-2026-134624 |
+| N-able (MailAssure): 1 CVE | 4 Exploited | 24 hours | 2026-11-23 (overdue) | CVE-2026-134624 |
 
 ## Light duty (12): patch by the due date (or your SLA, if sooner)
 
@@ -35,11 +35,11 @@ Nothing public yet, but internet-facing edge or remote-access gear gets a short 
 
 None.
 
-## On the list (67): watching
+## On the list (70): watching
 
 Deferred to the normal patch cycle and re-scored every day. Any one of them moves up the day a public PoC, working exploit code, or a KEV listing appears.
 
-Rechecks due in the next 7 days: 17.
+Rechecks due in the next 7 days: 16.
 
 ## Sick call commandos (5): the last 90 days
 
@@ -47,15 +47,15 @@ The vendors that keep turning up at sick call. Ranked by short-window bulletins 
 
 | Vendor | Bulletins | CVEs | Short-window | CVEs on KEV | Median days to KEV |
 | --- | --- | --- | --- | --- | --- |
-| WatchGuard | 13 | 91 | 13 | 0 | - |
+| WatchGuard | 12 | 89 | 12 | 0 | - |
 | MikroTik | 8 | 15 | 8 | 3 | 5 |
-| SonicWall | 7 | 22 | 7 | 3 | 1 |
+| SonicWall | 6 | 20 | 6 | 3 | 1 |
 | N-able | 7 | 30 | 6 | 2 | 1.5 |
 | Fortinet | 9 | 123 | 6 | 1 | 0 |
 
 
-## Cleared (184): this week
+## Cleared (185): this week
 
-Deferral held: 113. Window passed: 71. Marked done: 0.
+Deferral held: 114. Window passed: 71. Marked done: 0.
 
 The full record, with every item's history, is in [watchlist.json](watchlist.json).
