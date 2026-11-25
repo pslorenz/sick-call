@@ -1,6 +1,6 @@
 # The Binnacle List
 
-Updated 2026-11-24. What came through sick call, and what it means for the plan of the day.
+Updated 2026-11-25. What came through sick call, and what it means for the plan of the day.
 
 sick-call triages; it isn't incident response. Credible signs of compromise in your own environment go to your IR plan, not this list.
 
@@ -14,20 +14,18 @@ Being exploited, or working exploit code is public. Act inside the window.
 | Google release, 2026-11-10: 8 CVEs | 4 Exploited | 24 hours | 2026-11-11 (overdue) | CVE-2026-125350 |
 | N-able (MailAssure): 1 CVE | 4 Exploited | 24 hours | 2026-11-23 (overdue) | CVE-2026-134624 |
 
-## Light duty (12): patch by the due date (or your SLA, if sooner)
+## Light duty (10): patch by the due date (or your SLA, if sooner)
 
 Nothing public yet, but internet-facing edge or remote-access gear gets a short window anyway. Due dates here are sick-call's defaults. If your contract SLA is shorter, it wins.
 
-- Fortinet (FortiAnalyzer, FortiClientMac, FortiClientWindows and 7 more): 5 CVEs. 7 days, due 2026-11-17 (overdue)
-- WatchGuard (Endpoint Security): 1 CVE. 7 days, due 2026-11-17 (overdue)
 - Fortinet (FortiAnalyzer, FortiAnalyzer Cloud, FortiAnalyzer-BigData and 8 more): 93 CVEs. 7 days, due 2026-11-18 (overdue)
 - Palo Alto Networks (Checkov by Prisma Cloud, Cloud NGFW, PAN-OS and 1 more): 8 CVEs. 7 days, due 2026-11-18 (overdue)
 - Citrix NetScaler (ADC, Console, Gateway): 2 CVEs. 7 days, due 2026-11-19 (overdue)
 - Citrix (NetScaler ADC, NetScaler Gateway): 27 CVEs. 7 days, due 2026-11-20 (overdue)
 - N-able (N-central, N-central Patch Management Component): 17 CVEs. 72 hours, due 2026-11-20 (overdue)
 - ConnectWise (Automate): 1 CVE. 72 hours, due 2026-11-22 (overdue)
-- [Zyxel (DX3300-T0 firmware, DX3301-T0 firmware, EX3301-T0 firmware): 2 CVEs](https://www.zyxel.com/global/en/support/security-advisories/zyxel-security-advisory-for-out-of-bounds-write-and-post-authentication-command-injection-vulnerabilities-in-certain-dsl-ethernet-cpe-fiber-onts-and-wireless-extenders-11-17-2026). 7 days, due 2026-11-24
-- [Zyxel (EE5301-00 customized firmware): 1 CVE](https://www.zyxel.com/global/en/support/security-advisories/zyxel-security-advisory-for-incorrect-authorization-vulnerability-in-the-snmp-parameter-of-customized-firmware-for-the-ee5301-00-ethernet-cpe-11-17-2026). 7 days, due 2026-11-24
+- [Zyxel (DX3300-T0 firmware, DX3301-T0 firmware, EX3301-T0 firmware): 2 CVEs](https://www.zyxel.com/global/en/support/security-advisories/zyxel-security-advisory-for-out-of-bounds-write-and-post-authentication-command-injection-vulnerabilities-in-certain-dsl-ethernet-cpe-fiber-onts-and-wireless-extenders-11-17-2026). 7 days, due 2026-11-24 (overdue)
+- [Zyxel (EE5301-00 customized firmware): 1 CVE](https://www.zyxel.com/global/en/support/security-advisories/zyxel-security-advisory-for-incorrect-authorization-vulnerability-in-the-snmp-parameter-of-customized-firmware-for-the-ee5301-00-ethernet-cpe-11-17-2026). 7 days, due 2026-11-24 (overdue)
 - WatchGuard (Dimension): 15 CVEs. 7 days, due 2026-11-26
 - Ubiquiti Inc (UniFi Access Application): 7 CVEs. 7 days, due 2026-11-26
 
@@ -54,8 +52,8 @@ The vendors that keep turning up at sick call. Ranked by short-window bulletins 
 | Fortinet | 9 | 123 | 6 | 1 | 0 |
 
 
-## Cleared (185): this week
+## Cleared (187): this week
 
-Deferral held: 114. Window passed: 71. Marked done: 0.
+Deferral held: 114. Window passed: 73. Marked done: 0.
 
 The full record, with every item's history, is in [watchlist.json](watchlist.json).

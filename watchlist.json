@@ -119,46 +119,6 @@
    ]
   },
   {
-   "advisory": "fortinet-2026-11-10",
-   "name": "fortinet-2026-11-10",
-   "title": "Fortinet (FortiAnalyzer, FortiClientMac, FortiClientWindows and 7 more)",
-   "cves": [
-    "CVE-2025-61625",
-    "CVE-2026-121529",
-    "CVE-2026-121530",
-    "CVE-2026-126261",
-    "CVE-2026-26248"
-   ],
-   "cve_count": 5,
-   "kev_cves": [],
-   "day0": "2026-11-10",
-   "added": "2026-11-21",
-   "rung": 0,
-   "label": "Theoretical",
-   "driven_by": "CVE-2025-61625",
-   "window": "7 days",
-   "due": "2026-11-17",
-   "recheck_by": "2026-11-17",
-   "owner": "Steven",
-   "expires": null,
-   "status": "light duty",
-   "tripwire": "a public PoC",
-   "smb_match": [
-    "fortinet"
-   ],
-   "edge": true,
-   "remote_access": false,
-   "max_cvss": 9.1,
-   "history": [
-    {
-     "date": "2026-11-21",
-     "rung": 0,
-     "status": "light duty",
-     "note": "intake"
-    }
-   ]
-  },
-  {
    "advisory": "https://github.com/php/php-src/security/advisories/GHSA-68fq-fh7h-f8gr",
    "name": "GHSA-68fq-fh7h-f8gr",
    "title": "PHP Group (PHP)",
@@ -1789,42 +1749,6 @@
      "date": "2026-11-21",
      "rung": 0,
      "status": "watching",
-     "note": "intake"
-    }
-   ]
-  },
-  {
-   "advisory": "watchguard-2026-11-10",
-   "name": "watchguard-2026-11-10",
-   "title": "WatchGuard (Endpoint Security)",
-   "cves": [
-    "CVE-2026-57907"
-   ],
-   "cve_count": 1,
-   "kev_cves": [],
-   "day0": "2026-11-10",
-   "added": "2026-11-21",
-   "rung": 0,
-   "label": "Theoretical",
-   "driven_by": "CVE-2026-57907",
-   "window": "7 days",
-   "due": "2026-11-17",
-   "recheck_by": "2026-11-17",
-   "owner": "Steven",
-   "expires": null,
-   "status": "light duty",
-   "tripwire": "a public PoC",
-   "smb_match": [
-    "watchguard"
-   ],
-   "edge": true,
-   "remote_access": false,
-   "max_cvss": 8.5,
-   "history": [
-    {
-     "date": "2026-11-21",
-     "rung": 0,
-     "status": "light duty",
      "note": "intake"
     }
    ]
@@ -21245,7 +21169,97 @@
     }
    ],
    "closed_on": "2026-11-24"
+  },
+  {
+   "advisory": "fortinet-2026-11-10",
+   "name": "fortinet-2026-11-10",
+   "title": "Fortinet (FortiAnalyzer, FortiClientMac, FortiClientWindows and 7 more)",
+   "cves": [
+    "CVE-2025-61625",
+    "CVE-2026-121529",
+    "CVE-2026-121530",
+    "CVE-2026-126261",
+    "CVE-2026-26248"
+   ],
+   "cve_count": 5,
+   "kev_cves": [],
+   "day0": "2026-11-10",
+   "added": "2026-11-21",
+   "rung": 0,
+   "label": "Theoretical",
+   "driven_by": "CVE-2025-61625",
+   "window": "7 days",
+   "due": "2026-11-17",
+   "recheck_by": "2026-11-17",
+   "owner": "Steven",
+   "expires": null,
+   "status": "window passed",
+   "tripwire": "a public PoC",
+   "smb_match": [
+    "fortinet"
+   ],
+   "edge": true,
+   "remote_access": false,
+   "max_cvss": 9.1,
+   "history": [
+    {
+     "date": "2026-11-21",
+     "rung": 0,
+     "status": "light duty",
+     "note": "intake"
+    },
+    {
+     "date": "2026-11-25",
+     "rung": 0,
+     "status": "window passed",
+     "note": "7 days past due with no escalation"
+    }
+   ],
+   "closed_on": "2026-11-25"
+  },
+  {
+   "advisory": "watchguard-2026-11-10",
+   "name": "watchguard-2026-11-10",
+   "title": "WatchGuard (Endpoint Security)",
+   "cves": [
+    "CVE-2026-57907"
+   ],
+   "cve_count": 1,
+   "kev_cves": [],
+   "day0": "2026-11-10",
+   "added": "2026-11-21",
+   "rung": 0,
+   "label": "Theoretical",
+   "driven_by": "CVE-2026-57907",
+   "window": "7 days",
+   "due": "2026-11-17",
+   "recheck_by": "2026-11-17",
+   "owner": "Steven",
+   "expires": null,
+   "status": "window passed",
+   "tripwire": "a public PoC",
+   "smb_match": [
+    "watchguard"
+   ],
+   "edge": true,
+   "remote_access": false,
+   "max_cvss": 8.5,
+   "history": [
+    {
+     "date": "2026-11-21",
+     "rung": 0,
+     "status": "light duty",
+     "note": "intake"
+    },
+    {
+     "date": "2026-11-25",
+     "rung": 0,
+     "status": "window passed",
+     "note": "7 days past due with no escalation"
+    }
+   ],
+   "closed_on": "2026-11-25"
   }
  ],
- "updated": "2026-11-24"
+ "updated": "2026-11-25"
 }
