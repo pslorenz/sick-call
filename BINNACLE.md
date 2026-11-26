@@ -1,25 +1,21 @@
 # The Binnacle List
 
-Updated 2026-11-25. What came through sick call, and what it means for the plan of the day.
+Updated 2026-11-26. What came through sick call, and what it means for the plan of the day.
 
 sick-call triages; it isn't incident response. Credible signs of compromise in your own environment go to your IR plan, not this list.
 
-## Confined to quarters (3): needs action
+## Confined to quarters (1): needs action
 
 Being exploited, or working exploit code is public. Act inside the window.
 
 | What | Rung | Window | Due | Exploited |
 | --- | --- | --- | --- | --- |
-| Microsoft release, 2026-11-10: 1094 CVEs | 4 Exploited | 24 hours | 2026-11-11 (overdue) | CVE-2026-124194 |
-| Google release, 2026-11-10: 8 CVEs | 4 Exploited | 24 hours | 2026-11-11 (overdue) | CVE-2026-125350 |
 | N-able (MailAssure): 1 CVE | 4 Exploited | 24 hours | 2026-11-23 (overdue) | CVE-2026-134624 |
 
-## Light duty (10): patch by the due date (or your SLA, if sooner)
+## Light duty (8): patch by the due date (or your SLA, if sooner)
 
 Nothing public yet, but internet-facing edge or remote-access gear gets a short window anyway. Due dates here are sick-call's defaults. If your contract SLA is shorter, it wins.
 
-- Fortinet (FortiAnalyzer, FortiAnalyzer Cloud, FortiAnalyzer-BigData and 8 more): 93 CVEs. 7 days, due 2026-11-18 (overdue)
-- Palo Alto Networks (Checkov by Prisma Cloud, Cloud NGFW, PAN-OS and 1 more): 8 CVEs. 7 days, due 2026-11-18 (overdue)
 - Citrix NetScaler (ADC, Console, Gateway): 2 CVEs. 7 days, due 2026-11-19 (overdue)
 - Citrix (NetScaler ADC, NetScaler Gateway): 27 CVEs. 7 days, due 2026-11-20 (overdue)
 - N-able (N-central, N-central Patch Management Component): 17 CVEs. 72 hours, due 2026-11-20 (overdue)
@@ -33,11 +29,11 @@ Nothing public yet, but internet-facing edge or remote-access gear gets a short 
 
 None.
 
-## On the list (70): watching
+## On the list (67): watching
 
 Deferred to the normal patch cycle and re-scored every day. Any one of them moves up the day a public PoC, working exploit code, or a KEV listing appears.
 
-Rechecks due in the next 7 days: 16.
+Rechecks due in the next 7 days: 15.
 
 ## Sick call commandos (5): the last 90 days
 
@@ -45,15 +41,15 @@ The vendors that keep turning up at sick call. Ranked by short-window bulletins 
 
 | Vendor | Bulletins | CVEs | Short-window | CVEs on KEV | Median days to KEV |
 | --- | --- | --- | --- | --- | --- |
-| WatchGuard | 12 | 89 | 12 | 0 | - |
+| WatchGuard | 11 | 61 | 11 | 0 | - |
 | MikroTik | 8 | 15 | 8 | 3 | 5 |
 | SonicWall | 6 | 20 | 6 | 3 | 1 |
 | N-able | 7 | 30 | 6 | 2 | 1.5 |
 | Fortinet | 9 | 123 | 6 | 1 | 0 |
 
 
-## Cleared (187): this week
+## Cleared (194): this week
 
-Deferral held: 114. Window passed: 73. Marked done: 0.
+Deferral held: 117. Window passed: 77. Marked done: 0.
 
 The full record, with every item's history, is in [watchlist.json](watchlist.json).
